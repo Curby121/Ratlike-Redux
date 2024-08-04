@@ -84,17 +84,16 @@ class Item(Entity):
 # an instance of this class is placed on the table when an action is selected
 class Action(Viewable):
     src:Damageable
-    exh_cost:int
+    exh_cost:int = 0
     use_msg:str = None
     def __init__(self, source:Entity, **kwargs):
         self.eff: float = 1.0
         self.silent:bool = False
         super().__init__(**kwargs)
         self.src = source
-    def resolve(self, silent:bool = False):
+    def resolve(self):
         '''Perform this action'''
         self.src.exhaust += self.exh_cost
-
         if self.use_msg is not None and not self.silent:
             print(f'  {self.src.name} {self.use_msg}')
     def attack(self, atk):
@@ -107,37 +106,33 @@ class Action(Viewable):
 
 # TODO: Damage calculation based on weapon / skills etc
 class Attack(Action):
-    reach: int
-    tgt:Entity
+    reach:int
+    tgt:Damageable
     stagger:int
+    dmg:int
     def __init__(self, source:Entity, target:Damageable = None, **kwargs):
         self.tgt = target
         super().__init__(source = source, **kwargs)
     def resolve(self):
         super().resolve()
-        self.tgt.action.attack(atk = self)
+        if self.tgt is not None:
+            self.tgt.action.attack(atk = self)
     
 class CounterAttack(Attack):
-    '''Base class that stores an attack that is performed against the
-    first enemy that acted upon it. When a CounterAttack is resolved,
-    it\'s stored attack is used'''
+    '''Base class that stores an attack that is performed later'''
     def __init__(self, reaction:Attack, source: Entity, **kwargs):
         self.reaction_class = reaction
+        print(f'reaction = {self.reaction_class}')
         if 'target' in kwargs:
             kwargs['target'] = None
         super().__init__(source, **kwargs)
 
-    def resolve(self):
-        if self.tgt is not None and self.reaction_class is not None:
+    def react(self, target:Damageable = None):
+        '''Perform the saved action'''
+        if self.reaction_class is not None:
             return self.reaction_class(
-                target = self.tgt,
+                target = target,
                 source = self.src).resolve()
-    def attack(self, atk:Attack, dmg_mod:float = 1.0):
-        if self.tgt == None:
-            self.tgt = atk.src
-        if dmg_mod != 0:
-            atk.eff *= dmg_mod
-            return super().attack(atk)
 
 class Weapon(Item):
     '''Base class for all weapons.\n

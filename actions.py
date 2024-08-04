@@ -41,13 +41,20 @@ class Dodge(bc.CounterAttack):
     exh_cost_each = 16 # each dodge adds more stagger
     def __init__(self, source: bc.Entity, **kwargs):
         super().__init__(source.get_reaction(), source, **kwargs)
+        self.used:bool = False
     def DodgeSucceeds(self, atk: bc.Attack) -> bool:
+        if self.src.exhaust >= self.src.max_exh:
+            return False
         # TODO: chance to fail
         return True
+    
     def attack(self, atk: bc.Attack):
         self.src.exhaust += self.exh_cost_each
         if self.DodgeSucceeds(atk):
             print(f'   {atk.tgt.name} dodged the attack!')
-            return super().attack(atk, dmg_mod=0)
+            if not self.used:
+                print(f'     and reacts!')
+                self.react(target = atk.src)
+                self.used = True
         else:
             return super().attack(atk)

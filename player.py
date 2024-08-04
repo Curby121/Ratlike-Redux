@@ -26,7 +26,7 @@ class Player(bc.Damageable):
             print(f' {e.name}: {e.hp}/{e.max_hp}  {e.exhaust}/{e.max_exh}')
         
         print(f'\n You: {self.hp}/{self.max_hp}  {self.exhaust}/{self.max_exh}')
-        
+
         acts = self.get_combat_actions()
         print(f'You Can: {acts}')
         action_class = None
@@ -44,9 +44,9 @@ class Player(bc.Damageable):
         return super().take_turn(action_class, target = enemies[0])
     
     def get_reaction(self) -> bc.CounterAttack:
-        if self.equipment['Primary'].dodge_class:
+        if self.equipment['Primary'].dodge_class is not None:
             return self.equipment['Primary'].dodge_class
-        elif self.equipment['Secondary'].dodge_class:
+        elif self.equipment['Secondary'].dodge_class is not None:
             return self.equipment['Secondary'].dodge_class
         
     def get_combat_actions(self) -> list[bc.Attack]:
