@@ -131,8 +131,7 @@ class CounterAttack(Attack):
         if self.tgt is not None and self.reaction_class is not None:
             return self.reaction_class(
                 target = self.tgt,
-                source = self.src,
-                silent = True).resolve()
+                source = self.src).resolve()
     def attack(self, atk:Attack, dmg_mod:float = 1.0):
         if self.tgt == None:
             self.tgt = atk.src

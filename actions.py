@@ -47,6 +47,7 @@ class Dodge(bc.CounterAttack):
     def attack(self, atk: bc.Attack):
         self.src.exhaust += self.exh_cost_each
         if self.DodgeSucceeds(atk):
+            print(f'   {atk.tgt.name} dodged the attack!')
             return super().attack(atk, dmg_mod=0)
         else:
             return super().attack(atk)
