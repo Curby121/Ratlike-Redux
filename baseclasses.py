@@ -86,6 +86,7 @@ class Action(Viewable):
     src:Damageable
     exh_cost:int = 0
     use_msg:str = None
+    reach:int = 0
     def __init__(self, source:Entity, **kwargs):
         self.eff: float = 1.0
         self.silent:bool = False
@@ -122,7 +123,6 @@ class CounterAttack(Attack):
     '''Base class that stores an attack that is performed later'''
     def __init__(self, reaction:Attack, source: Entity, **kwargs):
         self.reaction_class = reaction
-        print(f'reaction = {self.reaction_class}')
         if 'target' in kwargs:
             kwargs['target'] = None
         super().__init__(source, **kwargs)
