@@ -81,8 +81,8 @@ class Action(Viewable):
     def attack(self, atk, dmg_mod:float = 1.0, stagger_mod:float = 1.0):
         '''Attack the source of this action. This function can be overridden
         on actions that interrupt incoming attacks'''
-        dmg = int(atk.dmg_mod * atk.src.dmg_base * atk.eff * dmg_mod)
-        stagger = int(atk.stagger_mod * atk.src.stagger_base * atk.eff * stagger_mod)
+        dmg = int(atk.dmg() * dmg_mod)
+        stagger = int(atk.stagger() * stagger_mod)
         self.src._take_damage(dmg, stagger)
         self.eff *= 1 -(stagger / self.src.max_exh)
 
@@ -101,6 +101,10 @@ class Attack(Action):
         super().resolve()
         if self.tgt is not None:
             self.tgt.action.attack(atk = self)
+    def dmg(self) -> int:
+        return self.src.dmg_base * self.dmg_mod * self.eff
+    def stagger(self) -> int:
+        return self.src.stagger_base * self.stagger_mod * self.eff
 
 class Strategy:
     '''Base Class for enemy attack AI.'''
@@ -116,11 +120,7 @@ class Strategy:
 class Enemy(Damageable):
     '''Base Class for enemies that the player will fight.\n
     These will show up in the enemy section of GUI,
-    and will be given chances to attack\n
-    Enemy's must have a list of attack classes, these are
-    a list of tuples of attack classes and weights. e.g:\n
-    [(actions.Stab, 2),\n
-        (actions.Dodge, 1)]'''
+    and will be given chances to attack'''
     strategy:Strategy
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)

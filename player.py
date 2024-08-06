@@ -6,12 +6,12 @@ class Player(bc.Damageable):
     name = 'Player'
     desc = 'You!'
     dmg_base = 6
-    stagger_base = 8
+    stagger_base = 16
     def __init__(self):
         plr = {
             'max_hp': 50,
             'max_exh': 100,
-            'exh_rec': 7
+            'exh_rec': 10
         }
         super().__init__(**plr)
         self.coins = 0
@@ -32,7 +32,11 @@ class Player(bc.Damageable):
         print(f'\n You: {self.hp}/{self.max_hp}  {self.exhaust}/{self.max_exh}')
 
         acts = self.get_combat_actions()
-        print(f'You Can: {acts}')
+        msg = ''
+        for i,a in enumerate(acts):
+            msg += f'{i}:{a.name}, '
+        msg = msg[:-2]
+        print(f'Actions: {msg}')
         action_class = None
         while action_class is None:
             i = input('->')
@@ -44,7 +48,7 @@ class Player(bc.Damageable):
 
         if self.exhaust >= self.max_exh:
             action_class = actions.Rest
-        print(f'Chose: {action_class}')
+        print(f'Chose: {action_class.name}')
         return super().take_turn(action_class, target = enemies[0])
     
     def get_reaction(self) -> bc.CounterAttack:

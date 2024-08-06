@@ -24,7 +24,7 @@ class Stab(bc.Attack):
 class Jab(bc.Attack):
     name = 'Jab'
     desc = 'A quick jab'
-    use_msg = 'used Jab'
+    use_msg = 'jabs at their opponent!'
     dmg_mod = 0.6
     stagger_mod = 0.5
     reach = 1
@@ -53,7 +53,7 @@ class Dodge(bc.CounterAttack):
     name = 'Dodge'
     desc = 'Dodge incoming attacks this turn'
     reach = 0
-    exh_cost = 16 # each dodge adds more stagger
+    exh_cost = 25 # each dodge adds more stagger
     def __init__(self, source: bc.Entity, **kwargs):
         super().__init__(source.get_reaction(), source, **kwargs)
         self.used:bool = False
@@ -84,11 +84,11 @@ class Dodge(bc.CounterAttack):
         return True
         
 class Block(bc.Action):
-    name = 'rat attack',
-    desc = 'burr'
+    name = 'Block'
+    desc = 'Shields Up!'
     def attack(self, atk:bc.Attack):
         print(' The attack is blocked!')
         # TODO: dont call _take_damage here, probably create a block reflect
-        atk.src._take_damage(0, int(atk.stagger_mod * 0.3))
-        return super().attack(atk, dmg_mod=0.4, stagger_mod=0.6)
+        super().attack(atk, dmg_mod=0.4, stagger_mod=0.6)
+        atk.src._take_damage(0, int(atk.stagger() * 0.3))
 
