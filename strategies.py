@@ -19,5 +19,5 @@ class Basic(bc.Strategy):
             wgts[i] = int(wgts[i] * (1 - x**4))
             if wgts[i] < 1:
                 wgts[i] = 1
-        print(f'          Enemy weights:{wgts}')
+        #print(f'          Enemy weights:{wgts}')
         return random.choices(actns, wgts)[0]

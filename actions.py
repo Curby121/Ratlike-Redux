@@ -102,16 +102,13 @@ class Block(bc.Action):
     desc = 'Shields Up!'
     def attack(self, atk:bc.Attack):
         print(' The attack is blocked!')
-        # TODO: dont call _take_damage here, probably create a block reflect
         dmg_m = 0.5
         stgr_m = 0.5
         reflect_m = 0.3
         if 'heavy' in atk.styles:
-            print('heavy')
             dmg_m *= 1.6
             stgr_m *= 1.8
         if 'quick' in atk.styles:
-            print('quick')
             dmg_m *= 0.8
             stgr_m *= 0.9
         super().attack(atk, dmg_mod=dmg_m, stagger_mod=stgr_m)
