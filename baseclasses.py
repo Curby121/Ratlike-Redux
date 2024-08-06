@@ -94,6 +94,7 @@ class Attack(Action):
     tgt:Damageable
     stagger_mod:float
     dmg_mod:float
+    styles:list[str]
     def __init__(self, source:Entity, target:Damageable = None, **kwargs):
         self.tgt = target
         super().__init__(source = source, **kwargs)
@@ -160,8 +161,6 @@ class Weapon(Item):
         self.paradigm = 'melee'
         self.dodge_class:CounterAttack = None
         super().__init__(**kwargs)
-        if not hasattr(self, 'style'):
-            raise Exception('weapon created with no style attribute')
     def get_actions(self) -> list[Attack]:
         # TODO: player talents / abilities
         return self.attacks
