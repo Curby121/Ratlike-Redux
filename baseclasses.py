@@ -59,6 +59,11 @@ class Damageable(Entity):
         '''Reset bookkeeping for next turn'''
         self.exhaust = max(0, self.exhaust - self.exh_rec)
 
+class Strategy:
+    '''Base Class for enemy attack choices'''
+    
+
+
 class Enemy(Damageable):
     '''Base Class for enemies that the player will fight.\n
     These will show up in the enemy section of GUI,
@@ -97,16 +102,18 @@ class Action(Viewable):
         self.src.exhaust += self.exh_cost
         if self.use_msg is not None and not self.silent:
             print(f'  {self.src.name} {self.use_msg}')
-    def attack(self, atk):
+    def attack(self, atk, dmg_mod:float = 1.0, stagger_mod:float = 1.0):
         '''Attack the source of this action. This function can be overridden
         on actions that interrupt incoming attacks'''
-        dmg = int(atk.dmg * atk.eff)
-        stagger = int(atk.stagger * atk.eff)
+        dmg = int(atk.dmg * atk.eff * dmg_mod)
+        stagger = int(atk.stagger * atk.eff * stagger_mod)
         self.src._take_damage(dmg, stagger)
         self.eff *= 1 -(stagger / self.src.max_exh)
 
 # TODO: Damage calculation based on weapon / skills etc
 class Attack(Action):
+    '''Attacks are an Action that have a target.\n
+    All attacks have a damage, stagger, and reach'''
     reach:int
     tgt:Damageable
     stagger:int
@@ -132,11 +139,13 @@ class CounterAttack(Attack):
         if self.reaction_class is not None:
             return self.reaction_class(
                 target = target,
-                source = self.src).resolve()
+                source = self.src
+                ).resolve()
 
 class Weapon(Item):
     '''Base class for all weapons.\n
     Weapons must have a style. Paradigm is melee by default'''
+    attacks:list[Action]
     def __init__(self, **kwargs):
         self.paradigm = 'melee'
         self.dodge_class:CounterAttack = None

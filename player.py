@@ -16,11 +16,13 @@ class Player(bc.Damageable):
         self.inv = []
         self.equipment:dict[str, bc.Weapon] = {
             'Primary': weapons.Dagger(),
-            'Secondary': None
+            'Secondary': weapons.WoodenShield()
         }
         self.action:bc.Action = None
 
     def take_turn(self, enemies:list[bc.Enemy]) -> bc.Attack:
+        '''For testing with CLI only, this will need to be redone once GUI
+        is implemented'''
         print('\n   Enemies:')
         for e in enemies:
             print(f' {e.name}: {e.hp}/{e.max_hp}  {e.exhaust}/{e.max_exh}')

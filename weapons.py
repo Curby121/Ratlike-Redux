@@ -11,3 +11,13 @@ class Dagger(bc.Weapon):
             actions.Stab
         ]
         self.dodge_class = actions.Jab
+
+class WoodenShield(bc.Weapon):
+    name = 'Wooden Shield'
+    desc = 'A small round wooden shield.'
+    style = 'None'
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.attacks = [
+            actions.Block
+        ]

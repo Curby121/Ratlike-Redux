@@ -1,7 +1,7 @@
 '''Definitions for enemies.'''
 import baseclasses as bc
-import player
 import actions
+import strategies as st
 
 class Rat(bc.Enemy):
     name = 'Rat'
@@ -19,7 +19,7 @@ class Goblin(bc.Enemy):
     name = 'Goblin'
     desc = 'A Stinky Goblin! Look out for it\'s pointy spear!'
     max_hp = 13
-    max_exh = 65
+    max_exh = 45
     exh_rec = 4
     atks = [
         (actions.Stab, 2),

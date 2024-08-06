@@ -49,25 +49,12 @@ class Dodge(bc.CounterAttack):
         super().__init__(source.get_reaction(), source, **kwargs)
         self.used:bool = False
 
-    def can_dodge(self) -> bool:
-        if self.src.exhaust >= self.src.max_exh:
-            print(f' {self.src.name} is too exhausted to dodge!')
-            return False
-        else:
-            return True
-
-    def dodge_succeeds(self, atk: bc.Attack) -> bool:
-        # TODO: implement skills
-        if random.choice(range(4)) == 0: # 20% flat fail rate
-            return False
-        return True
-    
     def attack(self, atk: bc.Attack):
-        if not self.can_dodge():
+        if not self._can_dodge():
             print (f' {self.src.name} is too tired to dodge!')
             return super().attack(atk)
         self.src.exhaust += self.exh_cost_each
-        if self.dodge_succeeds(atk):
+        if self._dodge_succeeds(atk):
             print(f'   {atk.tgt.name} dodged the attack!')
             if not self.used and self.reaction_class is not None:
                 print(f'     and reacts!')
@@ -75,3 +62,25 @@ class Dodge(bc.CounterAttack):
                 self.used = True
         else:
             return super().attack(atk)
+
+    def _can_dodge(self) -> bool:
+        if self.src.exhaust >= self.src.max_exh:
+            print(f' {self.src.name} is too exhausted to dodge!')
+            return False
+        else:
+            return True
+    def _dodge_succeeds(self, atk: bc.Attack) -> bool:
+        # TODO: implement skills
+        if random.choice(range(4)) == 0: # 20% flat fail rate
+            return False
+        return True
+        
+class Block(bc.Action):
+    name = 'rat attack',
+    desc = 'burr'
+    def attack(self, atk:bc.Attack):
+        print(' The attack is blocked!')
+        # TODO: dont call _take_damage here, probably create a block reflect
+        atk.src._take_damage(0, int(atk.stagger * 0.3))
+        return super().attack(atk, dmg_mod=0.4, stagger_mod=0.6)
+
