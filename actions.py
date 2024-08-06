@@ -12,6 +12,7 @@ class Rest(bc.Action):
         return super().resolve()
 
 class Stab(bc.Attack):
+    '''Default attack for daggers and knives'''
     name = 'Stab'
     desc = 'A hard stab'
     use_msg = 'stabs quickly!'
@@ -22,6 +23,7 @@ class Stab(bc.Attack):
     styles = ['quick']
 
 class Jab(bc.Attack):
+    '''Default reaction for daggers. Goblin standard attack'''
     name = 'Jab'
     desc = 'A quick jab'
     use_msg = 'jabs at their opponent!'
@@ -32,17 +34,29 @@ class Jab(bc.Attack):
     styles = ['quick']
 
 class Lunge(bc.Attack):
+    '''High range high stagger spear attack'''
     name = 'Lunge'
     desc = 'An aggressive lunge!'
     use_msg = 'lunged forwards!'
     dmg_mod = 1.5
     stagger_mod = 1.2
-    reach = 5
+    reach = 10
     exh_cost = 21
     
+class Smash(bc.Attack):
+    '''Med range high stagger'''
+    name = 'Smash!'
+    desc = 'A powerful overhead slam!'
+    use_msg = 'smashed viciously!'
+    dmg_mod = 1
+    stagger_mod = 1.5
+    reach = 7
+    exh_cost = 17
+    styles = ['heavy']
+
 class Bite(bc.Attack):
-    name = 'rat attack',
-    desc = 'burr',
+    name = 'Bite',
+    desc = 'Chomp!',
     use_msg = 'bites viciously!'
     dmg = 6,
     reach = 3

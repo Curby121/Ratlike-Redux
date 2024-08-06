@@ -1,6 +1,7 @@
 '''Definitions for enemies.'''
 import baseclasses as bc
 import strategies as st
+import actions
 
 # Currently unusable -- uppdate strategies
 class Rat(bc.Enemy):
@@ -23,4 +24,25 @@ class Goblin(bc.Enemy):
     exh_rec = 8
     dmg_base = 4
     stagger_base = 10
-    strategy = st.Goblin
+    strategy = st.Basic
+    actions = [
+        (actions.Lunge, 60),
+        (actions.Jab, 40),
+        (actions.Dodge, 50)
+    ]
+    
+
+class Skeleton(bc.Enemy):
+    name = 'Skeleton'
+    desc = 'Rattling bones and a heavy club.'
+    max_hp = 21
+    max_exh = 75
+    exh_rec = 6
+    dmg_base = 6
+    stagger_base = 13
+    strategy = st.Basic
+    actions = [
+        (actions.Smash, 60),
+        (actions.Stab, 40),
+        (actions.Block, 35)
+    ]

@@ -11,13 +11,13 @@ class Game:
 
     def Start(self):
         '''Start and run game'''
-        encounter = [enemies.Goblin()]
+        encounter = [enemies.Skeleton()]
         self.StartCombat(encounter)
 
     # TODO: encounters should take place in a 'room'
     # this function mainly exists for testing currently
     def StartCombat(self, enemies:list[bc.Enemy]):
-        while True:
+        while len(enemies) > 0:
             actions: list[bc.Action] = []
             actions.append(self.plr.take_turn(enemies))
 
@@ -36,12 +36,12 @@ class Game:
             while i < len(enemies):
                 if enemies[i].hp <= 0:
                     enemies.remove(enemies[i])
-                    i -= 1
                 else:
                     e.new_turn()
                     i += 1
             
             print (' **')
+        input('You Win!')
 
 
         

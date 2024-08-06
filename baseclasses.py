@@ -108,23 +108,22 @@ class Attack(Action):
 
 class Strategy:
     '''Base Class for enemy attack AI.'''
-    actions:list[Action]
-    def __init__(self, parent:Entity) -> None:
+    parent:Damageable
+    def __init__(self, parent:Damageable) -> None:
         self.parent = parent
-    def get_action(self, wgts:list[int] = []) -> Action:
-        if len(wgts) == 0:
-            return random.choice(self.actions)
-        else:
-            return random.choices(self.actions, weights = wgts)[0]
+    def get_action(self) -> Action:
+        return random.choice(self.parent.actions)[0]
     
 class Enemy(Damageable):
     '''Base Class for enemies that the player will fight.\n
     These will show up in the enemy section of GUI,
     and will be given chances to attack'''
     strategy:Strategy
+    actions:list[Action]
+    weights:list[int]
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.strategy = self.strategy(self)
+        self.strategy = self.strategy(parent = self)
     def take_turn(self, player):
         atk = self.strategy.get_action()
         return super().take_turn(target = player, action_class = atk)

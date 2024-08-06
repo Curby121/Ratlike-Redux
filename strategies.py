@@ -1,25 +1,23 @@
-'''Enemy intellegences'''
+'''Enemy intelligence'''
 import baseclasses as bc
 import actions
 import random
 random.seed()
 
-class Goblin(bc.Strategy):
-    actions = [
-        actions.Lunge,
-        actions.Jab,
-        actions.Dodge
-    ]
+class Basic(bc.Strategy):
+    '''Very simple strategy that tries to not over exhaust'''
+    parent:bc.Enemy
     def get_action(self) -> bc.Action:
+        actns,w = zip(*self.parent.actions)
+        wgts = []
+        wgts.extend(w)
         if self.parent.exhaust >= self.parent.max_exh:
             return actions.Rest
-        wgts = [60,40,50]
-        for i,a in enumerate(self.actions):
+        for i,a in enumerate(actns):
             # percentage of exhaust meter filled after using attack
             x = (a.exh_cost + self.parent.exhaust - self.parent.exh_rec) / self.parent.max_exh
-            if x > 0.5:
-                wgts[i] = int(wgts[i] * (1.2 - x**2))
+            wgts[i] = int(wgts[i] * (1 - x**4))
             if wgts[i] < 1:
                 wgts[i] = 1
-        print(f'Gob:{wgts}')
-        return super().get_action(wgts)
+        print(f'          Enemy weights:{wgts}')
+        return random.choices(actns, wgts)[0]
