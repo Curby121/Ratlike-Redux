@@ -9,6 +9,8 @@ class Rat(bc.Enemy):
     max_hp = 6
     max_exh = 70
     exh_rec = 9
+    dmg_base = 3
+    stagger_base = 4
     atks = [
         (actions.Bite, 1)
     ]
@@ -21,9 +23,6 @@ class Goblin(bc.Enemy):
     max_hp = 13
     max_exh = 45
     exh_rec = 4
-    atks = [
-        (actions.Stab, 2),
-        (actions.Dodge, 1)
-    ]
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
+    dmg_base = 4
+    stagger_base = 5
+    strategy = st.Goblin

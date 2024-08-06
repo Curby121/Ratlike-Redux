@@ -41,10 +41,13 @@ class Entity(Viewable):
         )
         return self.action
 
+#TODO: deprecate and remove
 class Damageable(Entity):
     '''Base Class for all entities capable of taking damage\n
     ALL damageables must be initialized with a max_hp stat'''
     damageable = True
+    dmg_base:int
+    stagger_base:int
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         if not hasattr(self, 'max_hp'):
@@ -58,33 +61,6 @@ class Damageable(Entity):
     def new_turn(self):
         '''Reset bookkeeping for next turn'''
         self.exhaust = max(0, self.exhaust - self.exh_rec)
-
-class Strategy:
-    '''Base Class for enemy attack choices'''
-    
-
-
-class Enemy(Damageable):
-    '''Base Class for enemies that the player will fight.\n
-    These will show up in the enemy section of GUI,
-    and will be given chances to attack\n
-    Enemy's must have a list of attack classes, these are
-    a list of tuples of attack classes and weights. e.g:\n
-    [(actions.Stab, 2),\n
-        (actions.Dodge, 1)]'''
-    atks:list
-    def take_turn(self, player):
-        classes, weights = zip(*self.atks)
-        atk = random.choices(classes, weights = weights)[0]
-        return super().take_turn(target = player, action_class = atk)
-
-class Item(Entity):
-    '''Base Class for entities that can be placed in players inventory\n
-    Items should have a value'''
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        if not hasattr(self, 'value'):
-            print(f'{self.name} has no value')
 
 # an instance of this class is placed on the table when an action is selected
 class Action(Viewable):
@@ -105,8 +81,8 @@ class Action(Viewable):
     def attack(self, atk, dmg_mod:float = 1.0, stagger_mod:float = 1.0):
         '''Attack the source of this action. This function can be overridden
         on actions that interrupt incoming attacks'''
-        dmg = int(atk.dmg * atk.eff * dmg_mod)
-        stagger = int(atk.stagger * atk.eff * stagger_mod)
+        dmg = int(atk.dmg_mod * atk.src.dmg_base * atk.eff * dmg_mod)
+        stagger = int(atk.stagger_mod * atk.src.stagger_base * atk.eff * stagger_mod)
         self.src._take_damage(dmg, stagger)
         self.eff *= 1 -(stagger / self.src.max_exh)
 
@@ -116,8 +92,8 @@ class Attack(Action):
     All attacks have a damage, stagger, and reach'''
     reach:int
     tgt:Damageable
-    stagger:int
-    dmg:int
+    stagger_mod:float
+    dmg_mod:float
     def __init__(self, source:Entity, target:Damageable = None, **kwargs):
         self.tgt = target
         super().__init__(source = source, **kwargs)
@@ -125,7 +101,42 @@ class Attack(Action):
         super().resolve()
         if self.tgt is not None:
             self.tgt.action.attack(atk = self)
+
+class Strategy:
+    '''Base Class for enemy attack AI.'''
+    actions:list[Action]
+    def __init__(self, parent:Entity) -> None:
+        self.parent = parent
+    def get_action(self, wgts:list[int] = []) -> Action:
+        if len(wgts) == 0:
+            return random.choice(self.actions)
+        else:
+            return random.choices(self.actions, weights = wgts)[0]
     
+class Enemy(Damageable):
+    '''Base Class for enemies that the player will fight.\n
+    These will show up in the enemy section of GUI,
+    and will be given chances to attack\n
+    Enemy's must have a list of attack classes, these are
+    a list of tuples of attack classes and weights. e.g:\n
+    [(actions.Stab, 2),\n
+        (actions.Dodge, 1)]'''
+    strategy:Strategy
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.strategy = self.strategy(self)
+    def take_turn(self, player):
+        atk = self.strategy.get_action()
+        return super().take_turn(target = player, action_class = atk)
+
+class Item(Entity):
+    '''Base Class for entities that can be placed in players inventory\n
+    Items should have a value'''
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not hasattr(self, 'value'):
+            print(f'{self.name} has no value')
+ 
 class CounterAttack(Attack):
     '''Base class that stores an attack that is performed later'''
     def __init__(self, reaction:Attack, source: Entity, **kwargs):

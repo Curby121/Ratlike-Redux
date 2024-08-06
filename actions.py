@@ -15,22 +15,31 @@ class Stab(bc.Attack):
     name = 'Stab'
     desc = 'A hard stab'
     use_msg = 'stabs quickly!'
-    dmg = 8
+    dmg_mod = 1
+    stagger_mod = 1
     reach = 3
     exh_cost = 12
-    stagger = 15
     styles = ['quick']
 
 class Jab(bc.Attack):
     name = 'Jab'
     desc = 'A quick jab'
     use_msg = 'used Jab'
-    dmg = 4
+    dmg_mod = 0.6
+    stagger_mod = 0.5
     reach = 1
     exh_cost = 6
-    stagger = 6
     styles = ['quick']
 
+class Lunge(bc.Attack):
+    name = 'Lunge'
+    desc = 'An aggressive lunge!'
+    use_msg = 'lunged forwards!'
+    dmg_mod = 1.5
+    stagger_mod = 1.2
+    reach = 5
+    exh_cost = 21
+    
 class Bite(bc.Attack):
     name = 'rat attack',
     desc = 'burr',
@@ -44,7 +53,7 @@ class Dodge(bc.CounterAttack):
     name = 'Dodge'
     desc = 'Dodge incoming attacks this turn'
     reach = 0
-    exh_cost_each = 16 # each dodge adds more stagger
+    exh_cost = 16 # each dodge adds more stagger
     def __init__(self, source: bc.Entity, **kwargs):
         super().__init__(source.get_reaction(), source, **kwargs)
         self.used:bool = False
@@ -53,7 +62,6 @@ class Dodge(bc.CounterAttack):
         if not self._can_dodge():
             print (f' {self.src.name} is too tired to dodge!')
             return super().attack(atk)
-        self.src.exhaust += self.exh_cost_each
         if self._dodge_succeeds(atk):
             print(f'   {atk.tgt.name} dodged the attack!')
             if not self.used and self.reaction_class is not None:
@@ -81,6 +89,6 @@ class Block(bc.Action):
     def attack(self, atk:bc.Attack):
         print(' The attack is blocked!')
         # TODO: dont call _take_damage here, probably create a block reflect
-        atk.src._take_damage(0, int(atk.stagger * 0.3))
+        atk.src._take_damage(0, int(atk.stagger_mod * 0.3))
         return super().attack(atk, dmg_mod=0.4, stagger_mod=0.6)
 
