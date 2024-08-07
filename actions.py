@@ -16,8 +16,8 @@ class Stab(bc.Attack):
     name = 'Stab'
     desc = 'A hard stab'
     use_msg = 'stabs quickly!'
-    dmg_mod = 1
-    stagger_mod = 1
+    dmg_mod = 0.8
+    stagger_mod = 0.8
     reach = 3
     exh_cost = 12
     styles = ['quick']
@@ -41,7 +41,7 @@ class Lunge(bc.Attack):
     dmg_mod = 1.5
     stagger_mod = 1.2
     reach = 10
-    exh_cost = 21
+    exh_cost = 17
     
 class Smash(bc.Attack):
     '''Med range high stagger'''
@@ -92,10 +92,19 @@ class Dodge(bc.CounterAttack):
         else:
             return True
     def _dodge_succeeds(self, atk: bc.Attack) -> bool:
-        # TODO: implement skills
-        if random.choice(range(4)) == 0: # 20% flat fail rate
+        roll = random.randint(1,100)
+        if 'heavy' in atk.styles:
+            return True
+        roll = random.choice(range(10))
+        if roll < 2: # 20 chance to fail
             return False
-        return True
+        if roll >= 4: # 60%
+            return True
+        if 'quick' in atk.styles and roll < 4: # quick is harder to dodge
+            return False
+        else:
+            return True
+
         
 class Block(bc.Action):
     name = 'Block'
@@ -104,13 +113,14 @@ class Block(bc.Action):
         print(' The attack is blocked!')
         dmg_m = 0.5
         stgr_m = 0.5
-        reflect_m = 0.3
+        reflect_m = 0.4
         if 'heavy' in atk.styles:
-            dmg_m *= 1.6
+            dmg_m *= 1.5
             stgr_m *= 1.8
+            reflect_m *= 0.7
         if 'quick' in atk.styles:
             dmg_m *= 0.8
-            stgr_m *= 0.9
+            reflect_m *= 1.6
         super().attack(atk, dmg_mod=dmg_m, stagger_mod=stgr_m)
         atk.src._take_damage(0, int(atk.stagger() * reflect_m))
 

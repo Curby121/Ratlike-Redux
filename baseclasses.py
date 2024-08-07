@@ -94,7 +94,7 @@ class Attack(Action):
     tgt:Damageable
     stagger_mod:float
     dmg_mod:float
-    styles:list[str]
+    styles:list[str] = []
     def __init__(self, source:Entity, target:Damageable = None, **kwargs):
         self.tgt = target
         super().__init__(source = source, **kwargs)

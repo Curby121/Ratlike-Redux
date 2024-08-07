@@ -11,7 +11,7 @@ class Game:
 
     def Start(self):
         '''Start and run game'''
-        encounter = [enemies.Skeleton()]
+        encounter = [enemies.Goblin()]
         self.StartCombat(encounter)
 
     # TODO: encounters should take place in a 'room'

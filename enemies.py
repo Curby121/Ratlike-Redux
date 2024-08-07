@@ -21,13 +21,13 @@ class Goblin(bc.Enemy):
     desc = 'A Stinky Goblin! Look out for it\'s pointy spear!'
     max_hp = 26
     max_exh = 45
-    exh_rec = 8
+    exh_rec = 7
     dmg_base = 4
     stagger_base = 10
     strategy = st.Basic
     actions = [
         (actions.Lunge, 60),
-        (actions.Jab, 40),
+        (actions.Jab, 30),
         (actions.Dodge, 50)
     ]
     

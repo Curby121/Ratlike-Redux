@@ -6,7 +6,7 @@ class Player(bc.Damageable):
     name = 'Player'
     desc = 'You!'
     dmg_base = 6
-    stagger_base = 16
+    stagger_base = 12
     def __init__(self):
         plr = {
             'max_hp': 50,
