@@ -17,7 +17,7 @@ class Player(bc.Damageable):
         self.coins = 0
         self.inv = []
         self.equipment:dict[str, bc.Weapon] = {
-            'Primary': weapons.Dagger(),
+            'Primary': None,
             'Secondary': weapons.WoodenShield()
         }
         self.action:bc.Action = None
@@ -52,10 +52,12 @@ class Player(bc.Damageable):
         return super().take_turn(action_class, target = enemies[0])
     
     def get_reaction(self) -> bc.CounterAttack:
+        print(self.equipment['Primary'].dodge_class)
         if self.equipment['Primary'].dodge_class is not None:
             return self.equipment['Primary'].dodge_class
-        elif self.equipment['Secondary'].dodge_class is not None:
-            return self.equipment['Secondary'].dodge_class
+        elif self.equipment['Secondary'] is not None:
+            if self.equipment['Secondary'].dodge_class is not None:
+                return self.equipment['Secondary'].dodge_class
         
     def get_combat_actions(self) -> list[bc.Attack]:
         acts = []

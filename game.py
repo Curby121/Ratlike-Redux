@@ -5,18 +5,26 @@ import baseclasses as bc
 import player
 import enemies
 import actions  as actn
+import weapons
 
 class Game:
     def __init__(self):
         self.plr = player.Player()
+        weapons.Dagger().equip(self.plr)
+        weapons.WoodenShield().equip(self.plr)
 
     def Start(self):
         '''Start and run game'''
         while True:
             enemy = None
             while enemy is None:
-                x = input('Enemy (g/s/t):')
-                if x == 'g':
+                x = input('Wep (da/sp), Enemy (g/s/t):')
+                if x == 'da':
+                    weapons.Dagger().equip(self.plr)
+                    weapons.WoodenShield().equip(self.plr)
+                elif x == 'sp':
+                    weapons.Spear().equip(self.plr)
+                elif x == 'g':
                     enemy = enemies.Goblin()
                 elif x == 's':
                     enemy = enemies.Skeleton()

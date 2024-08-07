@@ -153,13 +153,24 @@ class CounterAttack(Attack):
                 source = self.src
                 ).resolve()
 
-class Weapon(Item):
+class Equippable(Item):
+    '''Anything that can be worn or held'''
+    slot:str = None
+    twohanded:bool = False
+    def equip(self, plr):
+        #TODO: uneqip that slot!
+        plr.equipment[self.slot] = self
+        if self.twohanded:
+            plr.equipment['Secondary'] = None
+        print(f'{self.name} equipped!')
+
+class Weapon(Equippable):
     '''Base class for all weapons.\n
     Weapons must have a style. Paradigm is melee by default'''
     attacks:list[Action]
+    dodge_class:Attack = None
     def __init__(self, **kwargs):
         self.paradigm = 'melee'
-        self.dodge_class:CounterAttack = None
         super().__init__(**kwargs)
     def get_actions(self) -> list[Attack]:
         # TODO: player talents / abilities
