@@ -52,7 +52,6 @@ class Player(bc.Damageable):
         return super().take_turn(action_class, target = enemies[0])
     
     def get_reaction(self) -> bc.CounterAttack:
-        print(self.equipment['Primary'].dodge_class)
         if self.equipment['Primary'].dodge_class is not None:
             return self.equipment['Primary'].dodge_class
         elif self.equipment['Secondary'] is not None:
