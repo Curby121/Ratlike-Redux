@@ -21,3 +21,19 @@ class Basic(bc.Strategy):
                 wgts[i] = 1
         #print(f'          Enemy weights:{wgts}')
         return random.choices(actns, wgts)[0]
+    
+class Troll(Basic):
+    def __init__(self, parent: bc.Damageable) -> None:
+        super().__init__(parent)
+        self.attack_ready = False
+    def get_action(self) -> bc.Action:
+        if self.attack_ready:
+            self.attack_ready = False
+            if self.parent.exhaust >= self.parent.max_exh:
+                return actions.Rest
+            return actions.Smash
+        actn = super().get_action()
+        if actn is actions.TrollReady:
+            self.attack_ready = True
+        return actn
+        

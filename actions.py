@@ -7,9 +7,8 @@ class Rest(bc.Action):
     desc = 'Pause and recover your balance'
     use_msg = 'recovers their balance.'
     def resolve(self):
-        # 3x recovery for this turn
-        self.src.exhaust -= self.src.exh_rec *2
-        return super().resolve()
+        self.src.exhaust -= self.src.exh_rec
+        return super().resolve() # exhaust is taken off once in here too
 
 class Stab(bc.Attack):
     '''Default attack for daggers and knives'''
@@ -55,10 +54,11 @@ class Smash(bc.Attack):
     styles = ['heavy']
 
 class Bite(bc.Attack):
-    name = 'Bite',
-    desc = 'Chomp!',
+    name = 'Bite'
+    desc = 'Chomp!'
     use_msg = 'bites viciously!'
-    dmg = 6,
+    dmg_mod = 0.3
+    stagger_mod = 0.3
     reach = 3
     exh_cost = 3
 
@@ -66,6 +66,7 @@ class Dodge(bc.CounterAttack):
     '''Standard Dodge action. Checks for a reaction_class on it\'s source.'''
     name = 'Dodge'
     desc = 'Dodge incoming attacks this turn'
+    use_msg = 'jumps back!'
     reach = 0
     exh_cost = 25 # each dodge adds more stagger
     def __init__(self, source: bc.Entity, **kwargs):
@@ -74,7 +75,7 @@ class Dodge(bc.CounterAttack):
 
     def attack(self, atk: bc.Attack):
         if not self._can_dodge():
-            print (f' {self.src.name} is too tired to dodge!')
+            self.use_msg = 'was too tired to dodge!'
             return super().attack(atk)
         if self._dodge_succeeds(atk):
             print(f'   {atk.tgt.name} dodged the attack!')
@@ -82,6 +83,7 @@ class Dodge(bc.CounterAttack):
                 print(f'     and reacts!')
                 self.react(target = atk.src)
                 self.used = True
+                self.silent = True
         else:
             return super().attack(atk)
 
@@ -104,8 +106,7 @@ class Dodge(bc.CounterAttack):
             return False
         else:
             return True
-
-        
+     
 class Block(bc.Action):
     name = 'Block'
     desc = 'Shields Up!'
@@ -124,3 +125,7 @@ class Block(bc.Action):
         super().attack(atk, dmg_mod=dmg_m, stagger_mod=stgr_m)
         atk.src._take_damage(0, int(atk.stagger() * reflect_m))
 
+class TrollReady(bc.Action):
+    name = 'Troll smash prep'
+    desc = ''
+    use_msg = 'raises his club over his head!'

@@ -119,7 +119,7 @@ class Enemy(Damageable):
     '''Base Class for enemies that the player will fight.\n
     These will show up in the enemy section of GUI,
     and will be given chances to attack'''
-    strategy:Strategy
+    strategy:Strategy = Strategy
     actions:list[Action]
     weights:list[int]
     def __init__(self, **kwargs) -> None:

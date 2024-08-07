@@ -12,9 +12,9 @@ class Rat(bc.Enemy):
     exh_rec = 9
     dmg_base = 3
     stagger_base = 4
-    strategy = None
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    actions = [
+        (actions.Bite, 3)
+    ]
     
 class Goblin(bc.Enemy):
     name = 'Goblin'
@@ -33,7 +33,7 @@ class Goblin(bc.Enemy):
     
 class Skeleton(bc.Enemy):
     name = 'Skeleton'
-    desc = 'Rattling bones and a heavy club.'
+    desc = 'Rattling bones and a sturdy club.'
     max_hp = 22
     max_exh = 75
     exh_rec = 6
@@ -44,4 +44,18 @@ class Skeleton(bc.Enemy):
         (actions.Smash, 60),
         (actions.Stab, 40),
         (actions.Block, 35)
+    ]
+
+class CaveTroll(bc.Enemy):
+    name = 'Cave Troll'
+    desc = 'Large, scary and blue'
+    max_hp = 99
+    max_exh = 80
+    exh_rec = 8
+    dmg_base = 25
+    stagger_base = 26
+    strategy = st.Troll
+    actions = [
+        (actions.Jab, 40),
+        (actions.TrollReady, 60)
     ]
