@@ -152,6 +152,10 @@ class CounterAttack(Attack):
                 target = target,
                 source = self.src
                 ).resolve()
+        
+    def resolve(self):
+        '''Counter attacks do not resolve'''
+        return
 
 class Equippable(Item):
     '''Anything that can be worn or held'''

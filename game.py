@@ -1,22 +1,27 @@
 '''File that contains the game state and logic.\n
 Contains 'static' fields as well as the player character object instances'''
 
+import asyncio
 import baseclasses as bc
 import player
 import enemies
-import actions  as actn
+import actions as actn
 import weapons
+import GUI
 
 class Game:
     def __init__(self):
         self.plr = player.Player()
+        self.plr_action:bc.Action = None
         weapons.Dagger().equip(self.plr)
         weapons.WoodenShield().equip(self.plr)
 
-    def Start(self):
+    async def Start(self):
         '''Start and run game'''
+        GUI.init(self)
+        t1 = asyncio.create_task( GUI.run() )
+        enemy = enemies.Goblin()
         while True:
-            enemy = None
             while enemy is None:
                 x = input('Wep (da/sp), Enemy (g/s/t):')
                 if x == 'da':
@@ -32,15 +37,23 @@ class Game:
                     enemy = enemies.CaveTroll()
                 else:
                     print('enter only single lower case letter for choice')
-            self.StartCombat([enemy])
+            await self.StartCombat([enemy])
+            enemy = None
 
     # TODO: encounters should take place in a 'room'
     # this function mainly exists for testing currently
-    def StartCombat(self, enemies:list[bc.Enemy]):
+    async def StartCombat(self, enemies:list[bc.Enemy]):
+        self.plr_lock = asyncio.Event()
+        GUI.EnterCombat(enemies)
         self.plr.exhaust = 0
         while len(enemies) > 0:
             actions: list[bc.Action] = []
-            actions.append(self.plr.take_turn(enemies))
+            await self.plr_lock.wait()
+            self.plr_lock.clear()
+
+            if isinstance(self.plr_action, bc.Attack):
+                self.plr_action.tgt = enemies[0]
+            actions.append(self.plr_action)
 
             for e in enemies:
                 if e.exhaust >= e.max_exh:
@@ -70,5 +83,10 @@ class Game:
                 quit()
         print('You Win!')
 
-
+    def select_player_action(self, action:bc.Action):
+        self.plr_action = action(
+            source = self.plr
+        )
+        self.plr.action = self.plr_action
+        self.plr_lock.set()
         

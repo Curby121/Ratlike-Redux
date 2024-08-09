@@ -1,10 +1,11 @@
 '''#Welcome to ratlike!'''
 
+import asyncio
 import game
 
 if __name__ == "__main__":
     game_instance = game.Game()
-    game_instance.Start()
+    asyncio.run(game_instance.Start())
 
 else:
     print('whuh woah')

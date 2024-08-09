@@ -3,7 +3,6 @@ import baseclasses as bc
 import strategies as st
 import actions
 
-# Currently unusable -- uppdate strategies
 class Rat(bc.Enemy):
     name = 'Rat'
     desc = 'It thinks it\'s the main character'
@@ -12,6 +11,7 @@ class Rat(bc.Enemy):
     exh_rec = 9
     dmg_base = 3
     stagger_base = 4
+    strategy = st.Basic
     actions = [
         (actions.Bite, 3)
     ]
