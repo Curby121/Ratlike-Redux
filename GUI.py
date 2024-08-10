@@ -23,6 +23,10 @@ class CombatWindow(tk.Canvas):
         self.plr_stats.place(rely=0.6, relx=0.5, anchor='center', relwidth=0.35, relheight=0.1)
         self.enemy_stats = self.EnemyStats(self, enemies[0])
         self.enemy_stats.place(rely=0.25, relx=0.5, anchor='center')
+
+        self.log = Log(self)
+        self.log.place(relx=1, rely=0.5, relheight=1, relwidth=0.3, anchor='e')
+
         self.Updt()
 
     def Updt(self):
@@ -58,6 +62,24 @@ class CombatWindow(tk.Canvas):
         def examine(self):
             print(self.enemy.desc)
 
+# TODO: global log list of strings that can be added
+# or maybe have a global log that is packed to each screen
+class Log(tk.Canvas):
+    def __init__(self, root):
+        super().__init__(root, bg='white')
+        self.bar = ttk.Scrollbar(self)
+        self.text = tk.Text(self, wrap='word',
+                            yscrollcommand = self.bar.set,
+                            background='black',
+                            foreground='white'
+                            )
+        self.bar.pack(side=tk.RIGHT, fill='y')
+
+        self.text.insert(index=tk.END, chars='Lorem ipsum')
+
+        self.text.pack(side=tk.TOP, fill='both', expand=True)
+        self.text.config(state = tk.DISABLED) # stops from being able to type into
+
 class ActionBar(ttk.Frame):
     def __init__(self, root, actions:list):
         super().__init__(root)
@@ -84,7 +106,7 @@ class ActionBar(ttk.Frame):
                 text = 'Info',
                 command = self.examine_action
                 )
-            actn_b.grid(row = 0)
+            actn_b.grid(row = 0, ipady = 20)
             info_b.grid(row = 1)
         
         def choose_action(self):
@@ -92,12 +114,7 @@ class ActionBar(ttk.Frame):
             game.select_player_action(self.action)
         def examine_action(self):
             print(self.action.desc)
-
-class PlayerStats(ttk.Frame):
-    def __init__(self):
-        super().__init__()
-        var = tk.StringVar()
-        
+  
 def init(gme):
     global game
     game = gme
