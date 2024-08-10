@@ -13,28 +13,50 @@ root.columnconfigure(1, weight=1)
 game = None
 current_frame:ttk.Frame = None
 
+# TODO: currently only first enemy is displayed
 class CombatWindow(ttk.Frame):
     def __init__(self, root, plr_actions, enemies:list):
         super().__init__(root)
         actn_bar = ActionBar(self, plr_actions)
-        actn_bar.grid(row=1, column=1, columnspan=2)
+        actn_bar.grid(row=2, column=1, columnspan=2, padx=10, pady=10)
         self.plr_stats = self.PlrStats(self)
-        self.plr_stats.grid(row = 0, column = 1)
-        self.plr_stats.update()
+        self.plr_stats.grid(row = 1, column = 1, padx=10, pady=10)
+        self.enemy_stats = self.EnemyStats(self, enemies[0])
+        self.enemy_stats.grid(row=0, column=1, columnspan=2, padx=10, pady=10)
+        self.Updt()
 
     def Updt(self):
         self.plr_stats.update()
+        self.enemy_stats.update()
     
     class PlrStats(ttk.Frame):
         def __init__(self, root):
             super().__init__(root)
-            self.hp_L = ttk.Label(font=('Arial', 18))
-            self.ex_L = ttk.Label(font=('Arial', 18))
+            self.hp_L = ttk.Label(self, font=('Arial', 18))
+            self.exh_L = ttk.Label(self, font=('Arial', 18))
             self.hp_L.grid(sticky = tk.E, padx = 5)
-            self.ex_L.grid(row=0, column = 1,sticky = tk.W, padx = 5)
+            self.exh_L.grid(row=0, column = 1, sticky = tk.W, padx = 5)
         def update(self):
             self.hp_L.configure(text = f'HP: {game.plr.hp}/{game.plr.max_hp}')
-            self.ex_L.configure(text = f'Ex: {game.plr.exhaust}/{game.plr.max_exh}')
+            self.exh_L.configure(text = f'Ex: {game.plr.exhaust}/{game.plr.max_exh}')
+
+    class EnemyStats(ttk.Frame):
+        def __init__(self, root, enemy):
+            super().__init__(root)
+            self.enemy = enemy
+            self.label = ttk.Label(self, text=enemy.name, font=('Arial', 16))
+            self.label.grid(row=0, column=0)
+            self.hp_L = ttk.Label(self, font=('Arial', 14))
+            self.exh_L = ttk.Label(self, font=('Arial', 14))
+            self.hp_L.grid(row=1, column=0)
+            self.exh_L.grid(row=2, column=0)
+            self.x_B = ttk.Button(self, text='Examine', command = self.examine)
+            self.x_B.grid(row=3, column=0)
+        def update(self):
+            self.hp_L.configure(text = f'HP: {self.enemy.hp}/{self.enemy.max_hp}')
+            self.exh_L.configure(text = f'Ex: {self.enemy.exhaust}/{self.enemy.max_exh}')
+        def examine(self):
+            print(self.enemy.desc)
 
 class ActionBar(ttk.Frame):
     def __init__(self, root, actions:list):

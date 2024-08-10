@@ -137,7 +137,7 @@ class Item(Entity):
         if not hasattr(self, 'value'):
             print(f'{self.name} has no value')
  
-class CounterAttack(Attack):
+class CounterAttack(Action):
     '''Base class that stores an attack that is performed later'''
     def __init__(self, reaction:Attack, source: Entity, **kwargs):
         self.reaction_class = reaction
@@ -152,10 +152,6 @@ class CounterAttack(Attack):
                 target = target,
                 source = self.src
                 ).resolve()
-        
-    def resolve(self):
-        '''Counter attacks do not resolve'''
-        return
 
 class Equippable(Item):
     '''Anything that can be worn or held'''
