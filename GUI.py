@@ -14,15 +14,15 @@ game = None
 current_frame:ttk.Frame = None
 
 # TODO: currently only first enemy is displayed
-class CombatWindow(ttk.Frame):
+class CombatWindow(tk.Canvas):
     def __init__(self, root, plr_actions, enemies:list):
-        super().__init__(root)
+        super().__init__(root, bg='black')
         actn_bar = ActionBar(self, plr_actions)
-        actn_bar.grid(row=2, column=1, columnspan=2, padx=10, pady=10)
+        actn_bar.place(relx=0.5, rely=0.75, anchor='center')
         self.plr_stats = self.PlrStats(self)
-        self.plr_stats.grid(row = 1, column = 1, padx=10, pady=10)
+        self.plr_stats.place(rely=0.6, relx=0.5, anchor='center', relwidth=0.35, relheight=0.1)
         self.enemy_stats = self.EnemyStats(self, enemies[0])
-        self.enemy_stats.grid(row=0, column=1, columnspan=2, padx=10, pady=10)
+        self.enemy_stats.place(rely=0.25, relx=0.5, anchor='center')
         self.Updt()
 
     def Updt(self):
@@ -34,15 +34,15 @@ class CombatWindow(ttk.Frame):
             super().__init__(root)
             self.hp_L = ttk.Label(self, font=('Arial', 18))
             self.exh_L = ttk.Label(self, font=('Arial', 18))
-            self.hp_L.grid(sticky = tk.E, padx = 5)
-            self.exh_L.grid(row=0, column = 1, sticky = tk.W, padx = 5)
+            self.hp_L.place(relx=0.45, rely=0.5, anchor='e')
+            self.exh_L.place(relx=0.55, rely=0.5, anchor='w')
         def update(self):
             self.hp_L.configure(text = f'HP: {game.plr.hp}/{game.plr.max_hp}')
             self.exh_L.configure(text = f'Ex: {game.plr.exhaust}/{game.plr.max_exh}')
 
     class EnemyStats(ttk.Frame):
         def __init__(self, root, enemy):
-            super().__init__(root)
+            super().__init__(root, padding=15)
             self.enemy = enemy
             self.label = ttk.Label(self, text=enemy.name, font=('Arial', 16))
             self.label.grid(row=0, column=0)
@@ -116,5 +116,5 @@ def EnterCombat(enemies):
     if current_frame is not None:
         current_frame.destroy()
     current_frame = CombatWindow(root, game.plr.get_combat_actions(), enemies)
-    current_frame.grid()
+    current_frame.place(relwidth=1.0, relheight=1.0)
     print('created combat')
