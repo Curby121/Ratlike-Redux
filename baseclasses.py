@@ -176,4 +176,3 @@ class Weapon(Equippable):
     def get_actions(self) -> list[Attack]:
         # TODO: player talents / abilities
         return self.attacks
-

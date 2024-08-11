@@ -18,7 +18,7 @@ class Rat(bc.Enemy):
     
 class Goblin(bc.Enemy):
     name = 'Goblin'
-    desc = 'A Stinky Goblin! Look out for it\'s pointy spear!'
+    desc = 'A stinky goblin! Look out for it\'s pointy spear!'
     max_hp = 26
     max_exh = 45
     exh_rec = 7

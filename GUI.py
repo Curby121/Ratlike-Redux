@@ -47,11 +47,17 @@ class CombatWindow(tk.Canvas):
             super().__init__(root)
             self.hp_L = ttk.Label(self, font=('Arial', 18))
             self.exh_L = ttk.Label(self, font=('Arial', 18))
-            self.hp_L.place(relx=0.45, rely=0.5, anchor='e')
-            self.exh_L.place(relx=0.55, rely=0.5, anchor='w')
+            self.hp_B = ttk.Progressbar(self, mode = 'determinate')
+            self.exh_B = ttk.Progressbar(self, mode = 'determinate')
+            self.hp_L.place(relx=0.45, rely=0.5, anchor='se')
+            self.exh_L.place(relx=0.55, rely=0.5, anchor='sw')
+            self.hp_B.place(relx=0.45, rely=0.55, anchor='ne')
+            self.exh_B.place(relx=0.55, rely=0.55, anchor='nw')
         def update(self):
             self.hp_L.configure(text = f'HP: {game.plr.hp}/{game.plr.max_hp}')
             self.exh_L.configure(text = f'Ex: {game.plr.exhaust}/{game.plr.max_exh}')
+            self.hp_B.configure(value = 100*(game.plr.hp / game.plr.max_hp))
+            self.exh_B.configure(value = 100*(game.plr.exhaust / game.plr.max_exh))
 
     class EnemyStats(ttk.Frame):
         def __init__(self, root, enemy):
@@ -71,8 +77,6 @@ class CombatWindow(tk.Canvas):
         def examine(self):
             log(self.enemy.desc)
 
-# TODO: global log list of strings that can be added
-# or maybe have a global log that is packed to each screen
 class Log(tk.Canvas):
     def __init__(self, root):
         super().__init__(root)
@@ -90,6 +94,7 @@ class Log(tk.Canvas):
             self.text.insert(index=tk.END, chars = m)
             self.text.insert(index=tk.END, chars = '\n')
         self.text.pack(side=tk.TOP, fill='both', expand=True)
+        self.text.see(tk.END)
         self.text.config(state = tk.DISABLED) # stops from being able to type into
 
 class ActionBar(ttk.Frame):
@@ -125,7 +130,25 @@ class ActionBar(ttk.Frame):
             global game
             game.select_player_action(self.action)
         def examine_action(self):
-            log(self.action.desc)
+            log(f'{self.action.name}: \n{self.action.desc}')
+            log(f'  Exhaustion Cost: {self.action.exh_cost}')
+            if hasattr(self.action, 'reach'):
+                log(f'  Reach: {self.action.reach}')
+            if hasattr(self.action, 'dmg_mod'):
+                log(f'  Damage: x{self.action.dmg_mod}')
+                log(f'  Stagger: x{self.action.stagger_mod}')
+            if hasattr(self.action, 'styles'):
+                if len(self.styles > 0):
+                    for i,s in enumerate(self.action.styles):
+                        if i == 0:
+                            ls = [s]
+                        else:
+                            ls.append(f', {s}')
+                    log(f'  Attack Styles: {ls}')
+
+
+
+
   
 def init(gme):
     global game

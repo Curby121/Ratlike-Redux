@@ -87,6 +87,11 @@ class Dodge(bc.CounterAttack):
                 self.silent = True
         else:
             return super().attack(atk)
+        
+    def resolve(self):
+        if self.used:
+            self.use_msg = None
+        return super().resolve()
 
     def _can_dodge(self) -> bool:
         if self.src.exhaust >= self.src.max_exh:
