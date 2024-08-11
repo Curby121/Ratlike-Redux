@@ -1,4 +1,5 @@
 import baseclasses as bc
+import GUI
 import random
 random.seed()
 
@@ -78,9 +79,9 @@ class Dodge(bc.CounterAttack):
             self.use_msg = 'was too tired to dodge!'
             return super().attack(atk)
         if self._dodge_succeeds(atk):
-            print(f'   {atk.tgt.name} dodged the attack!')
+            GUI.log(f'   {atk.tgt.name} dodged the attack!')
             if not self.used and self.reaction_class is not None:
-                print(f'     and reacts!')
+                GUI.log(f'     and reacts!')
                 self.react(target = atk.src)
                 self.used = True
                 self.silent = True
@@ -89,7 +90,7 @@ class Dodge(bc.CounterAttack):
 
     def _can_dodge(self) -> bool:
         if self.src.exhaust >= self.src.max_exh:
-            print(f' {self.src.name} is too exhausted to dodge!')
+            GUI.log(f' {self.src.name} is too exhausted to dodge!')
             return False
         else:
             return True
@@ -111,7 +112,7 @@ class Block(bc.Action):
     name = 'Block'
     desc = 'Shields Up!'
     def attack(self, atk:bc.Attack):
-        print(' The attack is blocked!')
+        GUI.log(' The attack is blocked!')
         dmg_m = 0.5
         stgr_m = 0.5
         reflect_m = 0.4

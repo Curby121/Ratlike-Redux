@@ -67,6 +67,7 @@ class Game:
                 if a.src.hp <= 0:
                     continue
                 a.resolve()
+                await asyncio.sleep(.2) # animation delay
 
             i = 0
             self.plr.new_turn()
@@ -77,11 +78,11 @@ class Game:
                     e.new_turn()
                     i += 1
             
-            print (' **')
+            GUI.log(' **\n')
             if self.plr.hp <= 0:
                 input('You Lose!')
                 quit()
-        print('You Win!')
+        GUI.log('You Win!')
 
     def select_player_action(self, action:bc.Action):
         self.plr_action = action(

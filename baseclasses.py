@@ -3,6 +3,7 @@ None of these should be created by themselves, they should be derived from'''
 
 import random
 random.seed()
+import GUI
 
 class Viewable:
     '''Base class for all game objects that the player can know about\n
@@ -15,7 +16,7 @@ class Viewable:
         for key, val in kwargs.items():
             setattr(self, key, val)
     def examine(self):
-        print(f"{self.name}. {self.desc}")
+        GUI.log(f"{self.name}. {self.desc}")
 
 # might not be useful. All entities so far are damageables
 # TODO:? Merge with damageable, have 'damageable' just as a bool
@@ -57,7 +58,7 @@ class Damageable(Entity):
     def _take_damage(self, dmg:int, stgr:int):
         self.hp -= dmg
         self.exhaust += stgr
-        print(f'  {self.name} took {dmg} damage and {stgr} stagger!')
+        GUI.log(f'  {self.name} took {dmg} damage and {stgr} stagger!')
     def new_turn(self):
         '''Reset bookkeeping for next turn'''
         self.exhaust = max(0, self.exhaust - self.exh_rec)
@@ -77,7 +78,7 @@ class Action(Viewable):
         '''Perform this action'''
         self.src.exhaust += self.exh_cost
         if self.use_msg is not None and not self.silent:
-            print(f'  {self.src.name} {self.use_msg}')
+            GUI.log(f'{self.src.name} {self.use_msg}')
     def attack(self, atk, dmg_mod:float = 1.0, stagger_mod:float = 1.0):
         '''Attack the source of this action. This function can be overridden
         on actions that interrupt incoming attacks'''
@@ -162,7 +163,7 @@ class Equippable(Item):
         plr.equipment[self.slot] = self
         if self.twohanded:
             plr.equipment['Secondary'] = None
-        print(f'{self.name} equipped!')
+        GUI.log(f'You equipped a {self.name}.')
 
 class Weapon(Equippable):
     '''Base class for all weapons.\n

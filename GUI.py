@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 import asyncio
-import baseclasses as bc
 
 root = tk.Tk()
 root.title('RatLike Redux')
@@ -12,6 +11,16 @@ root.columnconfigure(1, weight=1)
 
 game = None
 current_frame:ttk.Frame = None
+current_log = None
+log_msgs:list[str] = []
+
+def log(msg:str):
+    log_msgs.append(msg)
+    if current_log is not None:
+        current_log.text.config(state = tk.NORMAL)
+        current_log.text.insert(index=tk.END, chars = '\n' + msg)
+        current_log.text.see(tk.END)
+        current_log.text.config(state = tk.DISABLED)
 
 # TODO: currently only first enemy is displayed
 class CombatWindow(tk.Canvas):
@@ -60,13 +69,15 @@ class CombatWindow(tk.Canvas):
             self.hp_L.configure(text = f'HP: {self.enemy.hp}/{self.enemy.max_hp}')
             self.exh_L.configure(text = f'Ex: {self.enemy.exhaust}/{self.enemy.max_exh}')
         def examine(self):
-            print(self.enemy.desc)
+            log(self.enemy.desc)
 
 # TODO: global log list of strings that can be added
 # or maybe have a global log that is packed to each screen
 class Log(tk.Canvas):
     def __init__(self, root):
-        super().__init__(root, bg='white')
+        super().__init__(root)
+        global current_log
+        current_log = self
         self.bar = ttk.Scrollbar(self)
         self.text = tk.Text(self, wrap='word',
                             yscrollcommand = self.bar.set,
@@ -74,9 +85,10 @@ class Log(tk.Canvas):
                             foreground='white'
                             )
         self.bar.pack(side=tk.RIGHT, fill='y')
-
-        self.text.insert(index=tk.END, chars='Lorem ipsum')
-
+        global log_msgs
+        for m in log_msgs:
+            self.text.insert(index=tk.END, chars = m)
+            self.text.insert(index=tk.END, chars = '\n')
         self.text.pack(side=tk.TOP, fill='both', expand=True)
         self.text.config(state = tk.DISABLED) # stops from being able to type into
 
@@ -91,7 +103,7 @@ class ActionBar(ttk.Frame):
             self.actns.append(f)
 
     class PlayerAction(ttk.Frame):
-        def __init__(self, root, action:bc.Action):
+        def __init__(self, root, action):
             super().__init__(root)
             self.action = action
             self.rowconfigure(0, weight=4)
@@ -113,7 +125,7 @@ class ActionBar(ttk.Frame):
             global game
             game.select_player_action(self.action)
         def examine_action(self):
-            print(self.action.desc)
+            log(self.action.desc)
   
 def init(gme):
     global game
@@ -127,7 +139,7 @@ async def run():
         root.update_idletasks()
         await asyncio.sleep(0)
 
-def EnterCombat(enemies):
+def EnterCombat(enemies:list):
     global current_frame
     global game
     if current_frame is not None:
