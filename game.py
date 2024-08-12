@@ -16,7 +16,7 @@ class Game:
         self.plr_action:bc.Action = None
         self.room = None
 
-        # for holding for when a player descision needs to be made
+        # for holding execution for when a player descision needs to be made
         self.plr_event = asyncio.Event()
 
         #testing
@@ -35,14 +35,14 @@ class Game:
                 ]
             )
         )
-
         room1 = bc.Room(
             conn_rooms = {
                 'n':room2
             },
-            enemies = None
+            enemies = [
+                enemies.Goblin()
+            ]
         )
-        room1.add_to_floor(weapons.Dagger())
 
         room2.add_exit('s', room1)
 
@@ -69,10 +69,9 @@ class Game:
             await self.EnterRoom()
             await self.plr_event.wait()
             self.plr_event.clear()
-            GUI.log('You walk through the door...')
 
     async def EnterRoom(self):
-        if self.room.enemies is not None:
+        if len(self.room.enemies) != 0:
             await self.StartCombat(self.room)
         else:
             GUI.EnterRoom(self.room)
@@ -120,6 +119,7 @@ class Game:
                 input('You Lose!')
                 quit()
         GUI.log('You Win!')
+        return self._reload_room()
 
     def select_player_action(self, action:bc.Action):
         '''Sets player combat action and ticks turn fwd'''
@@ -139,4 +139,4 @@ class Game:
     # TODO: remove this and find a clever way to do it in GUI, the flashing sucks
     def _reload_room(self):
         '''Called to refresh the GUI'''
-        self.try_move_room(self.room)
+        return self.try_move_room(self.room)

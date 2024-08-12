@@ -218,8 +218,8 @@ class Room:
     '''Rooms have exits, and may contain a centerpiece and/or ground objects\n
     centerpieces and exits are just RoomObjects that are drawn in different spots.\n
     floor_objects are RoomObjects and floor_items are Items.'''
-    centerpiece:RoomObject = None
-    enemies:list[Enemy] = None
+    centerpiece:RoomObject
+    enemies:list[Enemy]
     _dir_opposites:dict[str, str] = {
         'n' : 's',
         's' : 'n',
@@ -228,7 +228,7 @@ class Room:
     }
     def __init__(self,
                  conn_rooms:dict[str,] = None, # e.g. 'n' : room obj
-                 enemies:list[Enemy] = None,
+                 enemies:list[Enemy] = [],
                  centerpiece:RoomObject = None
                  ):
         self.exits:list[Exit] = []

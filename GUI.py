@@ -104,10 +104,11 @@ class RoomWindow(BaseWindow):
                 text = exit.direction,
                 command = self.move
             )
-            but.pack()
+            but.pack(ipady=25)
         def move(self):
             global game
             game.try_move_room(self.exit.dest_room)
+            log('You walk through the door...')
     
     class Object(tk.Frame):
         def __init__(self, root, obj):
@@ -268,7 +269,7 @@ def EnterRoom(room):
     global game
     if current_frame is not None:
         current_frame.destroy()
-    if room.enemies is not None:
+    if len(room.enemies) != 0:
         current_frame = CombatWindow(game.plr.get_combat_actions(), room.enemies)
     else:
         current_frame = RoomWindow(room)
