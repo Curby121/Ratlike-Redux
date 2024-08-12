@@ -26,7 +26,7 @@ def log(msg:str):
 class CombatWindow(tk.Canvas):
     def __init__(self, root, plr_actions, enemies:list):
         super().__init__(root, bg='black')
-        actn_bar = ActionBar(self, plr_actions)
+        actn_bar = self.ActionBar(self, plr_actions)
         actn_bar.place(relx=0.5, rely=0.75, anchor='center')
         self.plr_stats = self.PlrStats(self)
         self.plr_stats.place(rely=0.6, relx=0.5, anchor='center', relwidth=0.35, relheight=0.1)
@@ -77,6 +77,56 @@ class CombatWindow(tk.Canvas):
         def examine(self):
             log(self.enemy.desc)
 
+    class ActionBar(ttk.Frame):
+        def __init__(self, root, actions:list):
+            super().__init__(root)
+            self.actns = []
+            for i,a in enumerate(actions):
+                self.columnconfigure(i, weight=1)
+                f = self.PlayerAction(self, a)
+                f.grid(row = 0, column = i, ipadx=3)
+                self.actns.append(f)
+
+        class PlayerAction(ttk.Frame):
+            def __init__(self, root, action):
+                super().__init__(root)
+                self.action = action
+                self.rowconfigure(0, weight=4)
+                self.rowconfigure(1, weight=1)
+                actn_b = ttk.Button(
+                    self,
+                    text = action.name,
+                    command = self.choose_action
+                    )
+                info_b = ttk.Button(
+                    self,
+                    text = 'Info',
+                    command = self.examine_action
+                    )
+                actn_b.grid(row = 0, ipady = 20)
+                info_b.grid(row = 1)
+            
+            def choose_action(self):
+                global game
+                game.select_player_action(self.action)
+            def examine_action(self):
+                log(f'{self.action.name}: \n{self.action.desc}')
+                log(f'  Exhaustion Cost: {self.action.exh_cost}')
+                if hasattr(self.action, 'reach'):
+                    log(f'  Reach: {self.action.reach}')
+                if hasattr(self.action, 'dmg_mod'):
+                    log(f'  Damage: x{self.action.dmg_mod}')
+                    log(f'  Stagger: x{self.action.stagger_mod}')
+                if hasattr(self.action, 'styles'):
+                    if len(self.action.styles) > 0:
+                        for i,s in enumerate(self.action.styles):
+                            if i == 0:
+                                ls = [s]
+                            else:
+                                ls.append(f', {s}')
+                        log(f'  Attack Styles: {ls}')
+                log('\n')
+
 class Log(tk.Canvas):
     def __init__(self, root):
         super().__init__(root)
@@ -96,56 +146,6 @@ class Log(tk.Canvas):
         self.text.pack(side=tk.TOP, fill='both', expand=True)
         self.text.see(tk.END)
         self.text.config(state = tk.DISABLED) # stops from being able to type into
-
-class ActionBar(ttk.Frame):
-    def __init__(self, root, actions:list):
-        super().__init__(root)
-        self.actns = []
-        for i,a in enumerate(actions):
-            self.columnconfigure(i, weight=1)
-            f = self.PlayerAction(self, a)
-            f.grid(row = 0, column = i, ipadx=3)
-            self.actns.append(f)
-
-    class PlayerAction(ttk.Frame):
-        def __init__(self, root, action):
-            super().__init__(root)
-            self.action = action
-            self.rowconfigure(0, weight=4)
-            self.rowconfigure(1, weight=1)
-            actn_b = ttk.Button(
-                self,
-                text = action.name,
-                command = self.choose_action
-                )
-            info_b = ttk.Button(
-                self,
-                text = 'Info',
-                command = self.examine_action
-                )
-            actn_b.grid(row = 0, ipady = 20)
-            info_b.grid(row = 1)
-        
-        def choose_action(self):
-            global game
-            game.select_player_action(self.action)
-        def examine_action(self):
-            log(f'{self.action.name}: \n{self.action.desc}')
-            log(f'  Exhaustion Cost: {self.action.exh_cost}')
-            if hasattr(self.action, 'reach'):
-                log(f'  Reach: {self.action.reach}')
-            if hasattr(self.action, 'dmg_mod'):
-                log(f'  Damage: x{self.action.dmg_mod}')
-                log(f'  Stagger: x{self.action.stagger_mod}')
-            if hasattr(self.action, 'styles'):
-                if len(self.action.styles) > 0:
-                    for i,s in enumerate(self.action.styles):
-                        if i == 0:
-                            ls = [s]
-                        else:
-                            ls.append(f', {s}')
-                    log(f'  Attack Styles: {ls}')
-            log('\n')
    
 def init(gme):
     global game
