@@ -40,15 +40,16 @@ class Game:
 
 
             room = bc.Room(enemies = [enemy])
-            await self.StartCombat(room)
+            await self.EnterRoom(room)
             enemy = None
 
-    # TODO: encounters should take place in a 'room'
-    # this function mainly exists for testing currently
+    async def EnterRoom(self, room:bc.Room):
+        if room.enemies is not None:
+            await self.StartCombat(room)
+
     async def StartCombat(self, room:bc.Room):
         self.plr_lock = asyncio.Event()
-        if room.enemies is not None:
-            GUI.EnterCombat(room)
+        GUI.EnterCombat(room)
         self.plr.exhaust = 0
         while len(room.enemies) > 0:
             actions: list[bc.Action] = []
