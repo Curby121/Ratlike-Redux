@@ -48,6 +48,9 @@ class Game:
         self.plr.exhaust = 0
         while len(enemies) > 0:
             actions: list[bc.Action] = []
+            if self.plr.exhaust >= self.plr.max_exh:
+                self.select_player_action(actn.Rest)
+                GUI.log('YOU ARE EXHAUSTED!\n')
             await self.plr_lock.wait()
             self.plr_lock.clear()
 

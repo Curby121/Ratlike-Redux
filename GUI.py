@@ -145,6 +145,7 @@ class ActionBar(ttk.Frame):
                         else:
                             ls.append(f', {s}')
                     log(f'  Attack Styles: {ls}')
+            log('\n')
    
 def init(gme):
     global game

@@ -66,4 +66,5 @@ class Player(bc.Damageable):
         if len(acts) == 0:
             acts.append(actions.Bite)
         acts.append(actions.Dodge)
+        acts.append(actions.Rest)
         return acts
