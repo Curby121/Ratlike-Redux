@@ -195,7 +195,15 @@ class ObjectAction:
 
 class RoomObject(Viewable):
     '''Objects that appear in a room. RoomObjects are interactable'''
-    actions:list[ObjectAction]
+    actions:list[ObjectAction] = None
+    def __init__(self) -> None:
+        super().__init__()
+        if self.actions is not None:
+            self.actions.append(self.Examine(self))
+    class Examine(ObjectAction):
+        name = 'Examine'
+        def resolve(self, *args):
+            GUI.log(f'{self.parent.desc}')
 
 # TODO: door traps?
 class Exit(RoomObject):

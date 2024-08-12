@@ -4,11 +4,12 @@ class Chest(bc.RoomObject):
     name = 'Chest'
     desc = 'What could be inside?'
     def __init__(self, contents:list):
-        super().__init__()
         self.actions = [
             self.Open(parent = self)
         ]
         self.contents = contents
+        super().__init__()
+        
     class Open(bc.ObjectAction):
         name = 'Open'
         def resolve(self, game):

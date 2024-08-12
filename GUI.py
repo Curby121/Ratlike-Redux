@@ -122,9 +122,12 @@ class RoomWindow(BaseWindow):
                 b = ttk.Button(
                     self,
                     text = a.name,
-                    command = lambda: a.resolve(game)
+                    command = self.resolve(a.resolve)
                 )
                 b.grid(row=i+1,column=0)
+        def resolve(self, fn):
+            '''This stores a copy of the resolve function on the button'''
+            return lambda: fn(game)
 
     class Item(tk.Frame):
         def __init__(self, root, item):
