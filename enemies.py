@@ -59,3 +59,18 @@ class CaveTroll(bc.Enemy):
         (actions.Jab, 40),
         (actions.TrollReady, 60)
     ]
+
+class StaggerChild(bc.Enemy):
+    name = 'Talker Child'
+    desc = "This annoying child want's you to enjoy prison"
+    max_hp = 20
+    max_exh = 50
+    exh_rec = 6
+    dmg_base = 6
+    stagger_base = 16
+    strategy = st.Basic
+    actions = [
+        (actions.Talk, 60),
+        (actions.Stab, 40),
+        (actions.Block, 35)
+    ]

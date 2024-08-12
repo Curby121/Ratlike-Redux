@@ -135,3 +135,14 @@ class TrollReady(bc.Action):
     name = 'Troll smash prep'
     desc = ''
     use_msg = 'raises his club over his head!'
+
+class Talk(bc.Attack):
+    '''high stagger'''
+    name = 'Talk'
+    desc = 'Say it, dont spray it'
+    use_msg = 'HELLO WORLD!'
+    dmg_mod = 1
+    stagger_mod = 2.5
+    reach = 7
+    exh_cost = 0
+    styles = ['quick']
