@@ -22,20 +22,47 @@ def log(msg:str):
         current_log.text.see(tk.END)
         current_log.text.config(state = tk.DISABLED)
 
-# TODO: currently only first enemy is displayed
-class CombatWindow(tk.Canvas):
-    def __init__(self, root, plr_actions, enemies:list):
+class BaseWindow(tk.Canvas):
+    '''Contains player stats to the left and log to the right'''
+    def __init__(self):
         super().__init__(root, bg='black')
+        self.log = self.Log(self)
+        self.log.place(relx=1, rely=0.5, relheight=1, relwidth=0.3, anchor='e')
+    
+    class Log(tk.Canvas):
+        def __init__(self, root):
+            super().__init__(root)
+            global current_log
+            current_log = self
+            self.bar = ttk.Scrollbar(self)
+            self.text = tk.Text(self, wrap='word',
+                                yscrollcommand = self.bar.set,
+                                background='black',
+                                foreground='white'
+                                )
+            self.bar.pack(side=tk.RIGHT, fill='y')
+            global log_msgs
+            for m in log_msgs:
+                self.text.insert(index=tk.END, chars = m)
+                self.text.insert(index=tk.END, chars = '\n')
+            self.text.pack(side=tk.TOP, fill='both', expand=True)
+            self.text.see(tk.END)
+            self.text.config(state = tk.DISABLED) # stops from being able to type into
+
+class RoomWindow(BaseWindow):
+    def __init__(self):
+        super().__init__()
+
+# TODO: currently only first enemy is displayed
+class CombatWindow(BaseWindow):
+    def __init__(self, plr_actions, enemies:list):
+        super().__init__()
         actn_bar = self.ActionBar(self, plr_actions)
         actn_bar.place(relx=0.5, rely=0.75, anchor='center')
         self.plr_stats = self.PlrStats(self)
         self.plr_stats.place(rely=0.6, relx=0.5, anchor='center', relwidth=0.35, relheight=0.1)
         self.enemy_stats = self.EnemyStats(self, enemies[0])
         self.enemy_stats.place(rely=0.25, relx=0.5, anchor='center')
-
-        self.log = Log(self)
-        self.log.place(relx=1, rely=0.5, relheight=1, relwidth=0.3, anchor='e')
-
         self.Updt()
 
     def Updt(self):
@@ -127,26 +154,6 @@ class CombatWindow(tk.Canvas):
                         log(f'  Attack Styles: {ls}')
                 log('\n')
 
-class Log(tk.Canvas):
-    def __init__(self, root):
-        super().__init__(root)
-        global current_log
-        current_log = self
-        self.bar = ttk.Scrollbar(self)
-        self.text = tk.Text(self, wrap='word',
-                            yscrollcommand = self.bar.set,
-                            background='black',
-                            foreground='white'
-                            )
-        self.bar.pack(side=tk.RIGHT, fill='y')
-        global log_msgs
-        for m in log_msgs:
-            self.text.insert(index=tk.END, chars = m)
-            self.text.insert(index=tk.END, chars = '\n')
-        self.text.pack(side=tk.TOP, fill='both', expand=True)
-        self.text.see(tk.END)
-        self.text.config(state = tk.DISABLED) # stops from being able to type into
-   
 def init(gme):
     global game
     game = gme
@@ -164,6 +171,6 @@ def EnterCombat(enemies:list):
     global game
     if current_frame is not None:
         current_frame.destroy()
-    current_frame = CombatWindow(root, game.plr.get_combat_actions(), enemies)
+    current_frame = CombatWindow(game.plr.get_combat_actions(), enemies)
     current_frame.place(relwidth=1.0, relheight=1.0)
     print('created combat')
