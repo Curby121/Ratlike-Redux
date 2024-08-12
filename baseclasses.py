@@ -65,6 +65,8 @@ class Damageable(Entity):
 
 # an instance of this class is placed on the table when an action is selected
 class Action(Viewable):
+    '''Combat specific actions. All actions have a source and can be targetted
+    by Attacks'''
     src:Damageable
     exh_cost:int = 0
     use_msg:str = None
@@ -177,3 +179,56 @@ class Weapon(Equippable):
     def get_actions(self) -> list[Attack]:
         # TODO: player talents / abilities
         return self.attacks
+
+class ObjectAction(Viewable):
+    '''Class for interactable actions on objects. It should be noted that 
+    ObjectActions are distinct from Actions, which are combat specific'''
+
+class RoomObject(Viewable):
+    '''Objects that appear in a room. RoomObjects are interactable'''
+    actions:list[ObjectAction]
+    def __init__(self):
+        super().__init__()
+
+# TODO: door traps?
+class Exit(RoomObject):
+    '''Doors that connect rooms'''
+    direction:str = None
+    def __init__(self, room, dir:str) -> None:
+        super().__init__()
+        self.direction = dir
+        self.dest_room = room
+
+class Room:
+    '''Rooms have exits, and may contain a centerpiece and/or ground objects\n
+    centerpieces and exits are just RoomObjects that are drawn in different spots.\n
+    floor_objects are RoomObjects and floor_items are Items.'''
+    centerpiece:RoomObject = None
+    enemies:list[Enemy] = None
+    _dir_opposites:dict[str, str] = {
+        'n' : 's',
+        's' : 'n',
+        'e' : 'w',
+        'w' : 'e'
+    }
+    def __init__(self,
+                 conn_rooms:dict[str,] = None, # e.g. 'n' : room obj
+                 enemies:list[Enemy] = None
+                 ):
+        self.exits:list[Exit] = []
+        self.floor_objects:list[RoomObject] = []
+        self.floor_items:list[Item] = []
+        self.enemies = enemies
+        if conn_rooms is not None:
+            for r in conn_rooms:
+                self.exits.append(
+                    Exit(room = r[1], dir = r[0])
+                )
+            
+    def add_to_floor(self, obj:Viewable):
+        if isinstance(obj, RoomObject):
+            return self.floor_objects.append(obj)
+        elif isinstance(obj, Item):
+            return self.floor_items.append(obj)
+        else:
+            raise TypeError(obj)

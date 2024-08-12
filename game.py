@@ -37,16 +37,20 @@ class Game:
                     enemy = enemies.CaveTroll()
                 else:
                     print('enter only single lower case letter for choice')
-            await self.StartCombat([enemy])
+
+
+            room = bc.Room(enemies = [enemy])
+            await self.StartCombat(room)
             enemy = None
 
     # TODO: encounters should take place in a 'room'
     # this function mainly exists for testing currently
-    async def StartCombat(self, enemies:list[bc.Enemy]):
+    async def StartCombat(self, room:bc.Room):
         self.plr_lock = asyncio.Event()
-        GUI.EnterCombat(enemies)
+        if room.enemies is not None:
+            GUI.EnterCombat(room)
         self.plr.exhaust = 0
-        while len(enemies) > 0:
+        while len(room.enemies) > 0:
             actions: list[bc.Action] = []
             if self.plr.exhaust >= self.plr.max_exh:
                 self.select_player_action(actn.Rest)
@@ -55,10 +59,10 @@ class Game:
             self.plr_lock.clear()
 
             if isinstance(self.plr_action, bc.Attack):
-                self.plr_action.tgt = enemies[0]
+                self.plr_action.tgt = room.enemies[0]
             actions.append(self.plr_action)
 
-            for e in enemies:
+            for e in room.enemies:
                 if e.exhaust >= e.max_exh:
                     actions.append(actn.Rest(e))
                 else:
@@ -74,9 +78,9 @@ class Game:
 
             i = 0
             self.plr.new_turn()
-            while i < len(enemies):
-                if enemies[i].hp <= 0:
-                    enemies.remove(enemies[i])
+            while i < len(room.enemies):
+                if room.enemies[i].hp <= 0:
+                    room.enemies.remove(room.enemies[i])
                 else:
                     e.new_turn()
                     i += 1

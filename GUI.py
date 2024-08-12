@@ -50,6 +50,7 @@ class BaseWindow(tk.Canvas):
             self.text.config(state = tk.DISABLED) # stops from being able to type into
 
 class RoomWindow(BaseWindow):
+    '''Dungeon Room view. Rooms contain a centerpiece exits and ground objects'''
     def __init__(self):
         super().__init__()
 
@@ -166,11 +167,11 @@ async def run():
         root.update_idletasks()
         await asyncio.sleep(0)
 
-def EnterCombat(enemies:list):
+def EnterCombat(room):
     global current_frame
     global game
     if current_frame is not None:
         current_frame.destroy()
-    current_frame = CombatWindow(game.plr.get_combat_actions(), enemies)
+    current_frame = CombatWindow(game.plr.get_combat_actions(), room.enemies)
     current_frame.place(relwidth=1.0, relheight=1.0)
     print('created combat')
