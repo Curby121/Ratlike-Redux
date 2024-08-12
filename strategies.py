@@ -27,13 +27,13 @@ class Troll(Basic):
         super().__init__(parent)
         self.attack_ready = False
     def get_action(self) -> bc.Action:
-        if self.attack_ready:
+        if self.parent.exhaust >= self.parent.max_exh:
             self.attack_ready = False
-            if self.parent.exhaust >= self.parent.max_exh:
-                return actions.Rest
+            return actions.Rest
+        elif self.attack_ready:
+            self.attack_ready = False
             return actions.Smash
         actn = super().get_action()
         if actn is actions.TrollReady:
             self.attack_ready = True
         return actn
-        

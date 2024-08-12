@@ -114,6 +114,7 @@ class Strategy:
     def __init__(self, parent:Damageable) -> None:
         self.parent = parent
     def get_action(self) -> Action:
+        '''Should always be overwritten by inhereted members'''
         return random.choice(self.parent.actions)[0]
     
 class Enemy(Damageable):
