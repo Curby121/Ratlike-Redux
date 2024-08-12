@@ -138,18 +138,14 @@ class ActionBar(ttk.Frame):
                 log(f'  Damage: x{self.action.dmg_mod}')
                 log(f'  Stagger: x{self.action.stagger_mod}')
             if hasattr(self.action, 'styles'):
-                if len(self.styles > 0):
+                if len(self.action.styles) > 0:
                     for i,s in enumerate(self.action.styles):
                         if i == 0:
                             ls = [s]
                         else:
                             ls.append(f', {s}')
                     log(f'  Attack Styles: {ls}')
-
-
-
-
-  
+   
 def init(gme):
     global game
     game = gme
