@@ -28,6 +28,8 @@ class BaseWindow(tk.Canvas):
         super().__init__(root, bg='black')
         self.log = self.Log(self)
         self.log.place(relx=1, rely=0.5, relheight=1, relwidth=0.3, anchor='e')
+        global current_log
+        current_log = self.log
     
     class Log(tk.Canvas):
         def __init__(self, root):
@@ -49,10 +51,28 @@ class BaseWindow(tk.Canvas):
             self.text.see(tk.END)
             self.text.config(state = tk.DISABLED) # stops from being able to type into
 
+class ObjectBar(ttk.Frame):
+    objs:list[ttk.Frame] = None
+    def __init__(self, objects:list[ttk.Frame] = None):
+        super().__init__(root)
+        if objects is not None:
+            self.set_objects(objects)
+
+    def set_objects(self, objects:list[ttk.Frame] = None):
+        self.objs:list[ttk.Frame] = objects
+        for i,a in enumerate(self.objs):
+            self.columnconfigure(i, weight=1)
+            a.grid(row = 0, column = i, ipadx=3)
+            self.objs.append(a)
+
 class RoomWindow(BaseWindow):
     '''Dungeon Room view. Rooms contain a centerpiece exits and ground objects'''
     def __init__(self):
         super().__init__()
+        exits = None
+        centerpiece = None
+        grounds = None
+
 
 # TODO: currently only first enemy is displayed
 class CombatWindow(BaseWindow):

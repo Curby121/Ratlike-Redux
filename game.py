@@ -3,9 +3,10 @@ Contains 'static' fields as well as the player character object instances'''
 
 import asyncio
 import baseclasses as bc
+import actions as actn
+import roomobjects as ro
 import player
 import enemies
-import actions as actn
 import weapons
 import GUI
 
@@ -40,6 +41,7 @@ class Game:
 
 
             room = bc.Room(enemies = [enemy])
+            room.centerpiece = ro.Chest(contents=[weapons.Dagger()])
             await self.EnterRoom(room)
             enemy = None
 

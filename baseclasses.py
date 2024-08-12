@@ -180,15 +180,20 @@ class Weapon(Equippable):
         # TODO: player talents / abilities
         return self.attacks
 
-class ObjectAction(Viewable):
+class ObjectAction:
     '''Class for interactable actions on objects. It should be noted that 
     ObjectActions are distinct from Actions, which are combat specific'''
+    name:str
+    def __init__(self, parent) -> None:
+        self.parent = parent
+    def resolve(self, room):
+        '''Perform the action.\n
+        Must be overridden by inhereted members'''
+        raise NotImplementedError(self)
 
 class RoomObject(Viewable):
     '''Objects that appear in a room. RoomObjects are interactable'''
     actions:list[ObjectAction]
-    def __init__(self):
-        super().__init__()
 
 # TODO: door traps?
 class Exit(RoomObject):
