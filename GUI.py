@@ -1,6 +1,8 @@
+'''This should probably live in game.py'''
+# TODO: move dis bihth
+import asyncio
 import tkinter as tk
 from tkinter import ttk
-import asyncio
 
 root = tk.Tk()
 root.title('RatLike Redux')
@@ -30,6 +32,10 @@ class BaseWindow(tk.Canvas):
         self.log.place(relx=1, rely=0.5, relheight=1, relwidth=0.3, anchor='e')
         global current_log
         current_log = self.log
+
+    def Updt(*args):
+        '''Override in inhereted classes to update indo every frame'''
+        pass
     
     class Log(tk.Canvas):
         def __init__(self, root):
@@ -53,26 +59,95 @@ class BaseWindow(tk.Canvas):
 
 class ObjectBar(ttk.Frame):
     objs:list[ttk.Frame] = None
-    def __init__(self, objects:list[ttk.Frame] = None):
-        super().__init__(root)
-        if objects is not None:
-            self.set_objects(objects)
-
-    def set_objects(self, objects:list[ttk.Frame] = None):
+    def set_frames(self, objects:list[ttk.Frame] = None):
         self.objs:list[ttk.Frame] = objects
         for i,a in enumerate(self.objs):
             self.columnconfigure(i, weight=1)
             a.grid(row = 0, column = i, ipadx=3)
-            self.objs.append(a)
 
 class RoomWindow(BaseWindow):
     '''Dungeon Room view. Rooms contain a centerpiece exits and ground objects'''
-    def __init__(self):
+    def __init__(self, room):
         super().__init__()
-        exits = None
-        centerpiece = None
-        grounds = None
+        exits = []
+        centerpiece = room.centerpiece
+        grounds = []
 
+        exit_bar = ObjectBar(self)
+        ground_bar = ObjectBar(self)
+
+        for e in room.exits:
+            exits.append(self.Exit(exit_bar, e))
+        for obj in room.floor_objects:
+            grounds.append(self.Object(ground_bar, obj))
+        for item in room.floor_items:
+            grounds.append(self.Item(ground_bar, item))
+
+        if centerpiece is not None:
+            centerpiece_lab = self.Object(self, centerpiece)
+            centerpiece_lab.lab.config(font = ('Arial', 24), padding=10)
+            centerpiece_lab.place(relx=0.5,rely=0.5, anchor = 'center')
+
+        if len(exits) > 0:
+            exit_bar.set_frames(exits)
+            exit_bar.place(relx=0.5,rely=0.05, anchor='n')
+        if len(grounds) > 0:
+            ground_bar.set_frames(grounds)
+            ground_bar.place(relx=0.5,rely=0.95, anchor='s')
+
+    class Exit(tk.Frame):
+        def __init__(self, root, exit):
+            super().__init__(root)
+            self.exit = exit
+            but = ttk.Button(
+                self,
+                text = exit.direction,
+                command = self.move
+            )
+            but.pack()
+        def move(self):
+            global game
+            game.try_move_room(self.exit.dest_room)
+    
+    class Object(tk.Frame):
+        def __init__(self, root, obj):
+            super().__init__(root)
+            self.obj = obj
+            self.lab = ttk.Label(
+                self,
+                text = obj.name
+            )
+            self.lab.grid(row=0, column=0)
+            for i,a in enumerate(obj.actions):
+                b = ttk.Button(
+                    self,
+                    text = a.name,
+                    command = lambda: a.resolve(game)
+                )
+                b.grid(row=i+1,column=0)
+
+    class Item(tk.Frame):
+        def __init__(self, root, item):
+            super().__init__(root)
+            self.item = item
+            lab = ttk.Label(
+                self,
+                text = self.item.name,
+                font = ('Arial', 14)
+            )
+            take_b = ttk.Button(
+                self,
+                text = 'Take',
+                command = self.item.take
+            )
+            examine_b = ttk.Button(
+                self,
+                text = "Examine",
+                command = self.item.examine
+            )
+            lab.grid(row = 0, column = 0)
+            take_b.grid(row = 1, column = 0)
+            examine_b.grid(row = 2, column = 0)
 
 # TODO: currently only first enemy is displayed
 class CombatWindow(BaseWindow):
@@ -125,15 +200,13 @@ class CombatWindow(BaseWindow):
         def examine(self):
             log(self.enemy.desc)
 
-    class ActionBar(ttk.Frame):
+    class ActionBar(ObjectBar):
         def __init__(self, root, actions:list):
             super().__init__(root)
-            self.actns = []
-            for i,a in enumerate(actions):
-                self.columnconfigure(i, weight=1)
-                f = self.PlayerAction(self, a)
-                f.grid(row = 0, column = i, ipadx=3)
-                self.actns.append(f)
+            actns = []
+            for a in actions:
+                actns.append(self.PlayerAction(self, a))
+            self.set_frames(actns)
 
         class PlayerAction(ttk.Frame):
             def __init__(self, root, action):
@@ -187,11 +260,13 @@ async def run():
         root.update_idletasks()
         await asyncio.sleep(0)
 
-def EnterCombat(room):
+def EnterRoom(room):
     global current_frame
     global game
     if current_frame is not None:
         current_frame.destroy()
-    current_frame = CombatWindow(game.plr.get_combat_actions(), room.enemies)
+    if room.enemies is not None:
+        current_frame = CombatWindow(game.plr.get_combat_actions(), room.enemies)
+    else:
+        current_frame = RoomWindow(room)
     current_frame.place(relwidth=1.0, relheight=1.0)
-    print('created combat')

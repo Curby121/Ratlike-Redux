@@ -14,6 +14,12 @@ class Game:
     def __init__(self):
         self.plr = player.Player()
         self.plr_action:bc.Action = None
+        self.room = None
+
+        # for holding for when a player descision needs to be made
+        self.plr_event = asyncio.Event()
+
+        #testing
         weapons.Dagger().equip(self.plr)
         weapons.WoodenShield().equip(self.plr)
 
@@ -21,6 +27,27 @@ class Game:
         '''Start and run game'''
         GUI.init(self)
         t1 = asyncio.create_task( GUI.run() )
+
+        room2 = bc.Room(
+            centerpiece = ro.Chest(
+                contents = [
+                    weapons.Dagger()
+                ]
+            )
+        )
+
+        room1 = bc.Room(
+            conn_rooms = {
+                'n':room2
+            },
+            enemies = None
+        )
+        room1.add_to_floor(weapons.Dagger())
+
+        room2.add_exit('s', room1)
+
+        self.room = room1
+
         enemy = enemies.Goblin()
         while True:
             while enemy is None:
@@ -37,29 +64,29 @@ class Game:
                 elif x == 't':
                     enemy = enemies.CaveTroll()
                 else:
-                    print('enter only single lower case letter for choice')
+                    print('crimnge')
 
+            await self.EnterRoom()
+            await self.plr_event.wait()
+            self.plr_event.clear()
+            GUI.log('You walk through the door...')
 
-            room = bc.Room(enemies = [enemy])
-            room.centerpiece = ro.Chest(contents=[weapons.Dagger()])
-            await self.EnterRoom(room)
-            enemy = None
-
-    async def EnterRoom(self, room:bc.Room):
-        if room.enemies is not None:
-            await self.StartCombat(room)
+    async def EnterRoom(self):
+        if self.room.enemies is not None:
+            await self.StartCombat(self.room)
+        else:
+            GUI.EnterRoom(self.room)
 
     async def StartCombat(self, room:bc.Room):
-        self.plr_lock = asyncio.Event()
-        GUI.EnterCombat(room)
+        GUI.EnterRoom(room)
         self.plr.exhaust = 0
         while len(room.enemies) > 0:
             actions: list[bc.Action] = []
             if self.plr.exhaust >= self.plr.max_exh:
                 self.select_player_action(actn.Rest)
                 GUI.log('YOU ARE EXHAUSTED!\n')
-            await self.plr_lock.wait()
-            self.plr_lock.clear()
+            await self.plr_event.wait()
+            self.plr_event.clear()
 
             if isinstance(self.plr_action, bc.Attack):
                 self.plr_action.tgt = room.enemies[0]
@@ -95,9 +122,21 @@ class Game:
         GUI.log('You Win!')
 
     def select_player_action(self, action:bc.Action):
+        '''Sets player combat action and ticks turn fwd'''
         self.plr_action = action(
             source = self.plr
         )
         self.plr.action = self.plr_action
-        self.plr_lock.set()
-        
+        self.plr_event.set()
+
+    def on_object_action(self, obj:bc.RoomObject, index:int):
+        print('on_object_action')
+
+    def try_move_room(self, room:bc.Room):
+        self.room = room
+        self.plr_event.set()
+
+    # TODO: remove this and find a clever way to do it in GUI, the flashing sucks
+    def _reload_room(self):
+        '''Called to refresh the GUI'''
+        self.try_move_room(self.room)

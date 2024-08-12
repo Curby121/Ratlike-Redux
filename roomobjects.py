@@ -1,5 +1,4 @@
 import baseclasses as bc
-import weapons
 
 class Chest(bc.RoomObject):
     name = 'Chest'
@@ -12,6 +11,8 @@ class Chest(bc.RoomObject):
         self.contents = contents
     class Open(bc.ObjectAction):
         name = 'Open'
-        def resolve(self, room:bc.Room):
+        def resolve(self, game):
             while len(self.parent.contents) > 0:
-                room.add_to_floor(self.parent.contents.pop())
+                game.room.add_to_floor(self.parent.contents.pop())
+            self.parent.actions.remove(self)
+            game._reload_room()

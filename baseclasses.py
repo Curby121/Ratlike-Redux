@@ -133,13 +133,15 @@ class Enemy(Damageable):
         atk = self.strategy.get_action()
         return super().take_turn(target = player, action_class = atk)
 
-class Item(Entity):
+class Item(Viewable):
     '''Base Class for entities that can be placed in players inventory\n
     Items should have a value'''
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if not hasattr(self, 'value'):
             print(f'{self.name} has no value')
+    def take(self):
+        print(f'take(): {self}')
  
 class CounterAttack(Action):
     '''Base class that stores an attack that is performed later'''
@@ -186,7 +188,7 @@ class ObjectAction:
     name:str
     def __init__(self, parent) -> None:
         self.parent = parent
-    def resolve(self, room):
+    def resolve(self, game):
         '''Perform the action.\n
         Must be overridden by inhereted members'''
         raise NotImplementedError(self)
@@ -218,17 +220,25 @@ class Room:
     }
     def __init__(self,
                  conn_rooms:dict[str,] = None, # e.g. 'n' : room obj
-                 enemies:list[Enemy] = None
+                 enemies:list[Enemy] = None,
+                 centerpiece:RoomObject = None
                  ):
         self.exits:list[Exit] = []
         self.floor_objects:list[RoomObject] = []
         self.floor_items:list[Item] = []
         self.enemies = enemies
+        self.centerpiece = centerpiece
         if conn_rooms is not None:
-            for r in conn_rooms:
-                self.exits.append(
-                    Exit(room = r[1], dir = r[0])
-                )
+            for key,val in conn_rooms.items():
+                self.add_exit(key, val)
+
+    def add_exit(self, dir:str, room):
+        for e in self.exits:
+            if e.direction == dir:
+                raise ValueError
+        self.exits.append(
+            Exit(room, dir)
+        )
             
     def add_to_floor(self, obj:Viewable):
         if isinstance(obj, RoomObject):
