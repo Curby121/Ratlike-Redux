@@ -29,7 +29,7 @@ class BaseWindow(tk.Canvas):
     def __init__(self):
         super().__init__(root, bg='black')
         self.log = self.Log(self)
-        self.log.place(relx=1, rely=0.5, relheight=1, relwidth=0.3, anchor='e')
+        self.log.place(relx=1, rely=0.5, relheight=1, relwidth=0.25, anchor='e')
         global current_log
         current_log = self.log
 
@@ -66,7 +66,7 @@ class ObjectBar(ttk.Frame):
             a.grid(row = 0, column = i, ipadx=3)
 
 class RoomWindow(BaseWindow):
-    '''Dungeon Room view. Rooms contain a centerpiece exits and ground objects'''
+    '''Dungeon Room view. Rooms can contain a centerpiece, exits, and ground objects'''
     def __init__(self, room):
         super().__init__()
         exits = []
@@ -99,9 +99,21 @@ class RoomWindow(BaseWindow):
         def __init__(self, root, exit):
             super().__init__(root)
             self.exit = exit
+            dir:str = self.exit.direction
+            long_dir = ''
+            while len(dir) > 0:
+                if dir[0] == 'n':
+                    long_dir += 'North'
+                elif dir[0] == 's':
+                    long_dir += 'South'
+                elif dir[0] == 'e':
+                    long_dir += 'East'
+                elif dir[0] == 'w':
+                    long_dir += 'West'
+                dir = dir[1:]
             but = ttk.Button(
                 self,
-                text = exit.direction,
+                text = long_dir,
                 command = self.move
             )
             but.pack(ipady=25)
