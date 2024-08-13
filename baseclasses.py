@@ -211,6 +211,7 @@ class Exit(RoomObject):
     direction:str = None
     def __init__(self, room, dir:str) -> None:
         super().__init__()
+        assert(dir is not None)
         self.direction = dir
         self.dest_room = room
 
@@ -227,7 +228,7 @@ class Room:
         'w' : 'e'
     }
     def __init__(self,
-                 conn_rooms:dict[str,] = None, # e.g. 'n' : room obj
+                 conn_rooms:dict[str,] = {}, # e.g. 'n' : room obj
                  enemies:list[Enemy] = [],
                  centerpiece:RoomObject = None
                  ):
@@ -236,17 +237,25 @@ class Room:
         self.floor_items:list[Item] = []
         self.enemies = enemies
         self.centerpiece = centerpiece
-        if conn_rooms is not None:
+        assert isinstance(conn_rooms, dict)
+        self.conn_rooms = conn_rooms
+        if self.conn_rooms is not None:
             for key,val in conn_rooms.items():
                 self.add_exit(key, val)
 
     def add_exit(self, dir:str, room):
+        '''Creates an exit object and sets it to a direction.\n
+        directions that already exist are overwritten'''
         for e in self.exits:
             if e.direction == dir:
-                raise ValueError
+                self.exits.remove(e)
+                break
         self.exits.append(
             Exit(room, dir)
         )
+    def rand_choice(self, tuple:tuple) -> object:
+        pop, wgts = zip(*tuple)
+        return random.choices(pop, weights = wgts)[0]
             
     def add_to_floor(self, obj:Viewable):
         if isinstance(obj, RoomObject):
@@ -255,3 +264,14 @@ class Room:
             return self.floor_items.append(obj)
         else:
             raise TypeError(obj)
+    
+    def enter(self, game):
+        game.try_move_room(self)
+
+class Dungeon:
+    '''Base class'''
+    room_class:Room
+    encounters:tuple
+    def get_room() -> Room:
+        raise NotImplementedError
+    

@@ -5,6 +5,7 @@ import asyncio
 import baseclasses as bc
 import actions as actn
 import roomobjects as ro
+import rooms
 import player
 import enemies
 import weapons
@@ -43,10 +44,11 @@ class Game:
                 enemies.Goblin()
             ]
         )
-
         room2.add_exit('s', room1)
 
-        self.room = room1
+        room = rooms.LabyrinthRoom()
+        
+        room.enter(self)
 
         enemy = enemies.Goblin()
         while True:
@@ -80,12 +82,12 @@ class Game:
         GUI.EnterRoom(room)
         self.plr.exhaust = 0
         while len(room.enemies) > 0:
+            self.plr_event.clear() # ensure entering room set() doesnt stick
             actions: list[bc.Action] = []
             if self.plr.exhaust >= self.plr.max_exh:
                 self.select_player_action(actn.Rest)
                 GUI.log('YOU ARE EXHAUSTED!\n')
-            await self.plr_event.wait()
-            self.plr_event.clear()
+            await self.plr_event.wait() # wait for plr input
 
             if isinstance(self.plr_action, bc.Attack):
                 self.plr_action.tgt = room.enemies[0]
@@ -96,8 +98,12 @@ class Game:
                     actions.append(actn.Rest(e))
                 else:
                     actions.append(e.take_turn(self.plr))
+            try:
+                actions.sort(key = lambda x: x.reach, reverse = True)
+            except AttributeError as e:
+                print(f'room.enemies = {room.enemies}\nactions = {actions}')
+                raise e
 
-            actions.sort(key = lambda x: x.reach, reverse = True)
             for a in actions:
                 # TODO: comprehensive death checks
                 if a.src.hp <= 0:
@@ -139,4 +145,5 @@ class Game:
     # TODO: remove this and find a clever way to do it in GUI, the flashing sucks
     def _reload_room(self):
         '''Called to refresh the GUI'''
+        print(f'room refresh.\nc_r: {self.room.conn_rooms}\nexits:{self.room.exits}')
         return self.try_move_room(self.room)

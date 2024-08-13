@@ -119,7 +119,7 @@ class RoomWindow(BaseWindow):
             but.pack(ipady=25)
         def move(self):
             global game
-            game.try_move_room(self.exit.dest_room)
+            self.exit.dest_room.enter(game)
             log('You walk through the door...')
     
     class Object(tk.Frame):

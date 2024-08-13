@@ -1,14 +1,17 @@
 import baseclasses as bc
 import GUI
+import weapons
 
 class Chest(bc.RoomObject):
     name = 'Chest'
-    def __init__(self, contents:list):
+    def __init__(self, contents:list = []):
         self.desc = 'What could be inside?'
         self.actions = [
             self.Open(parent = self)
         ]
         self.contents = contents
+        if len(self.contents) == 0:
+            self.contents.append(weapons.WoodenShield())
         super().__init__()
         
     class Open(bc.ObjectAction):
