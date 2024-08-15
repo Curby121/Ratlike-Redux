@@ -206,13 +206,16 @@ class CombatWindow(BaseWindow):
             self.label.grid(row=0, column=0)
             self.hp_L = ttk.Label(self, font=('Arial', 14))
             self.exh_L = ttk.Label(self, font=('Arial', 14))
+            self.dist_L = ttk.Label(self, font=('Arial', 14))
             self.hp_L.grid(row=1, column=0)
             self.exh_L.grid(row=2, column=0)
+            self.dist_L.grid(row=4, column=0)
             self.x_B = ttk.Button(self, text='Examine', command = self.examine)
             self.x_B.grid(row=3, column=0)
         def update(self):
             self.hp_L.configure(text = f'HP: {self.enemy.hp}/{self.enemy.max_hp}')
             self.exh_L.configure(text = f'Ex: {self.enemy.exhaust}/{self.enemy.max_exh}')
+            self.dist_L.configure(text = f'Dist: {self.enemy.distance}')
         def examine(self):
             log(self.enemy.desc)
 
@@ -262,7 +265,6 @@ class CombatWindow(BaseWindow):
                             else:
                                 ls.append(f', {s}')
                         log(f'  Attack Styles: {ls}')
-                log('\n')
 
 def init(gme):
     global game

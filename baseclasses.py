@@ -58,7 +58,7 @@ class Damageable(Entity):
     def _take_damage(self, dmg:int, stgr:int):
         self.hp -= dmg
         self.exhaust += stgr
-        GUI.log(f'  {self.name} took {dmg} damage and {stgr} stagger!')
+        GUI.log(f'  {self.name} took {dmg} dmg, {stgr} stgr!')
     def new_turn(self):
         '''Reset bookkeeping for next turn'''
         self.exhaust = max(0, self.exhaust - self.exh_rec)
@@ -81,13 +81,31 @@ class Action(Viewable):
         self.src.exhaust += self.exh_cost
         if self.use_msg is not None and not self.silent:
             GUI.log(f'{self.src.name} {self.use_msg}')
-    def attack(self, atk, dmg_mod:float = 1.0, stagger_mod:float = 1.0):
+    def attack(self, atk,
+               dmg_mod:float = 1.0,
+               stagger_mod:float = 1.0,
+               mod_dist:bool = True,
+               dist_max:int = -1,
+               dist_min:int = -1
+               ):
         '''Attack the source of this action. This function can be overridden
         on actions that interrupt incoming attacks'''
         dmg = int(atk.dmg() * dmg_mod)
         stagger = int(atk.stagger() * stagger_mod)
         self.src._take_damage(dmg, stagger)
         self.eff *= 1 -(stagger / self.src.max_exh)
+        if mod_dist:
+            if isinstance(self.src, Enemy):
+                src = self.src
+            elif isinstance(atk.src, Enemy):
+                src = atk.src
+            dist = min(src.distance, atk.reach)
+            if dist_min != -1:
+                dist = max(dist, dist_min)
+            if dist_max != -1:
+                dist = min(dist, dist_max)
+
+            src.distance = dist   
 
 # TODO: Damage calculation based on weapon / skills etc
 class Attack(Action):
@@ -101,14 +119,37 @@ class Attack(Action):
     def __init__(self, source:Entity, target:Damageable = None, **kwargs):
         self.tgt = target
         super().__init__(source = source, **kwargs)
+        self.eff_r = self._get_eff_reach()
+
     def resolve(self):
         super().resolve()
         if self.tgt is not None:
             self.tgt.action.attack(atk = self)
+
+    def _get_eff_reach(self) -> int:
+        if isinstance(self.tgt, Enemy):
+            return min(self.reach, self.tgt.distance)
+        elif isinstance(self.src, Enemy):
+            return min(self.reach, self.src.distance)
+        else:
+            print(f'err, src {self.src}, tgt: {self.tgt}')
+            raise NotImplementedError
     def dmg(self) -> int:
         return self.src.dmg_base * self.dmg_mod * self.eff
     def stagger(self) -> int:
         return self.src.stagger_base * self.stagger_mod * self.eff
+    
+    def __gt__(self, other):
+        print('greth')
+        if not isinstance(other, Attack):
+            raise ValueError
+        if self.eff_r > other.eff_r:
+            return True
+        elif self.eff_r == other.eff_r:
+            if 'quick' in self.styles and 'quick' not in other.styles:
+                return True
+        else:
+            return False
 
 class Strategy:
     '''Base Class for enemy attack AI.'''
@@ -126,9 +167,11 @@ class Enemy(Damageable):
     strategy:Strategy = Strategy
     actions:list[Action]
     weights:list[int]
+    distance:int
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.strategy = self.strategy(parent = self)
+        self.distance = 30
     def take_turn(self, player):
         atk = self.strategy.get_action()
         return super().take_turn(target = player, action_class = atk)

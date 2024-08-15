@@ -7,8 +7,8 @@ random.seed()
 class LabyrinthRoom(bc.Room):
     encounters = [
         ([enemies.Goblin], 30),
-        ([enemies.Skeleton], 10),
-        ([], 120)
+        ([enemies.Skeleton], 1000),
+        ([], 0) # 120
     ]
     centerpieces = [
         (ro.Chest, 15),
@@ -36,13 +36,12 @@ class LabyrinthRoom(bc.Room):
             rand_dir = random.choice(dirs)
             self.conn_rooms[rand_dir] = None
     def enter(self, game):
+        # make a new room for connected rooms that have not been generated yet
         dirs = list(self.conn_rooms.keys())
-        # remove all used dirs
-        for e in self.exits:
-            if e.direction in dirs:
-                dirs.remove(e.direction)
+        for exit in self.exits:
+            if exit.direction in dirs:
+                dirs.remove(exit.direction) # remove dirs that already have an exit
         for dir in dirs:
-            print('new room')
             r = LabyrinthRoom(conn_rooms = {
                     self._dir_opposites[dir] : self
                 })

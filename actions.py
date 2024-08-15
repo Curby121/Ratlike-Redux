@@ -18,7 +18,7 @@ class Stab(bc.Attack):
     use_msg = 'stabs quickly!'
     dmg_mod = 0.8
     stagger_mod = 0.8
-    reach = 3
+    reach = 4
     exh_cost = 12
     styles = ['quick']
 
@@ -29,7 +29,7 @@ class Jab(bc.Attack):
     use_msg = 'jabs at their opponent!'
     dmg_mod = 0.6
     stagger_mod = 0.5
-    reach = 1
+    reach = 3
     exh_cost = 6
     styles = ['quick']
 
@@ -75,6 +75,7 @@ class Dodge(bc.CounterAttack):
         self.used:bool = False
 
     def attack(self, atk: bc.Attack):
+        self.silent = True
         if not self._can_dodge():
             self.use_msg = 'was too tired to dodge!'
             return super().attack(atk)
@@ -84,13 +85,10 @@ class Dodge(bc.CounterAttack):
                 GUI.log(f'     and reacts!')
                 self.react(target = atk.src)
                 self.used = True
-                self.silent = True
         else:
             return super().attack(atk)
         
     def resolve(self):
-        if self.used:
-            self.use_msg = None
         return super().resolve()
 
     def _can_dodge(self) -> bool:
@@ -104,7 +102,7 @@ class Dodge(bc.CounterAttack):
         if 'heavy' in atk.styles:
             return True
         roll = random.choice(range(10))
-        if roll < 2: # 20 chance to fail
+        if roll < 2: # 20% chance to fail
             return False
         if roll >= 4: # 60%
             return True
@@ -120,16 +118,25 @@ class Block(bc.Action):
         GUI.log(' The attack is blocked!')
         dmg_m = 0.5
         stgr_m = 0.5
-        reflect_m = 0.4
+        mod_dist = True
+        min_dist = 5
+        reflected_stagger = 0.4 * atk.stagger()
         if 'heavy' in atk.styles:
             dmg_m *= 1.5
             stgr_m *= 1.8
-            reflect_m *= 0.7
+            reflected_stagger = 0.7 * atk.stagger()
+            mod_dist = True
+            min_dist = atk.reach # push back to 
         if 'quick' in atk.styles:
             dmg_m *= 0.8
-            reflect_m *= 1.6
-        super().attack(atk, dmg_mod=dmg_m, stagger_mod=stgr_m)
-        atk.src._take_damage(0, int(atk.stagger() * reflect_m))
+            reflected_stagger = 10
+        super().attack(atk,
+                       dmg_mod = dmg_m,
+                       stagger_mod = stgr_m,
+                       mod_dist = mod_dist,
+                       dist_min = min_dist
+                       )
+        atk.src._take_damage(0, int(reflected_stagger))
 
 class TrollReady(bc.Action):
     name = 'Troll smash prep'
