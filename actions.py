@@ -11,14 +11,26 @@ class Rest(bc.Action):
         self.src.exhaust -= self.src.exh_rec
         return super().resolve() # exhaust is taken off once in here too
 
+class Slash(bc.Attack):
+    '''Default attack for bladed weapons
+    Med range, low damage, med stagger'''
+    name = 'Slash'
+    desc = 'The simplest of blade techniques'
+    use_msg = 'slashes'
+    dmg_mod = 0.8
+    stagger_mod = 1.0
+    reach = 5
+    exh_cost = 12
+
 class Stab(bc.Attack):
-    '''Default attack for daggers and knives'''
+    '''Default attack for daggers and knives
+    Short range, good damage, low stagger'''
     name = 'Stab'
     desc = 'A hard stab'
     use_msg = 'stabs quickly!'
-    dmg_mod = 0.8
-    stagger_mod = 0.8
-    reach = 4
+    dmg_mod = 1.0
+    stagger_mod = 0.75
+    reach = 3
     exh_cost = 12
     styles = ['quick']
 
@@ -33,11 +45,11 @@ class Jab(bc.Attack):
     exh_cost = 6
     styles = ['quick']
 
-class Lunge(bc.Attack):
+class Poke(bc.Attack):
     '''High range high stagger spear attack'''
     name = 'Lunge'
-    desc = 'An aggressive lunge!'
-    use_msg = 'lunged forwards!'
+    desc = 'Poke their eyes out, kid!'
+    use_msg = 'poked with their spear!'
     dmg_mod = 1.5
     stagger_mod = 1.2
     reach = 10
@@ -57,7 +69,7 @@ class Smash(bc.Attack):
 class Bite(bc.Attack):
     name = 'Bite'
     desc = 'Chomp!'
-    use_msg = 'bites viciously!'
+    use_msg = 'bites ferociously!'
     dmg_mod = 0.3
     stagger_mod = 0.3
     reach = 3
@@ -81,16 +93,16 @@ class Dodge(bc.CounterAttack):
             return super().attack(atk)
         if self._dodge_succeeds(atk):
             GUI.log(f'  {atk.tgt.name} dodged the attack!')
+            atk.mod_distance(atk, dist_min = atk.reach + 1)
             if not self.used and self.reaction_class is not None:
-                GUI.log(f'   and reacts!')
                 self.on_reaction(atk)
+            
         else:
             return super().attack(atk)
 
     def on_reaction(self, atk:bc.Attack):
         '''Called when a reaction occurs'''
         react:bool = True
-        atk.mod_distance(atk, dist_min = atk.reach + 1)
         if 'quick' in atk.styles:
             react = False
         elif 'heavy' in atk.styles:
@@ -98,6 +110,7 @@ class Dodge(bc.CounterAttack):
                              self.reaction_class.reach,
                              self.reaction_class.reach)
         if react:
+            GUI.log(f'   and reacts!')
             if self.reaction_class.reach >= atk.get_distance():
                 self.used = True
                 return self.react(target = atk.src)
@@ -128,13 +141,13 @@ class Block(bc.Action):
     desc = 'Shields Up!'
     def attack(self, atk:bc.Attack):
         GUI.log(' The attack is blocked!')
-        dmg_m = 0.5
+        dmg_m = 0.35
         stgr_m = 0.5
         mod_dist = True
         min_dist = 5
         reflected_stagger = 0.4 * atk.stagger()
         if 'heavy' in atk.styles:
-            dmg_m *= 1.5
+            dmg_m *= 1.75
             stgr_m *= 1.8
             reflected_stagger = 0.7 * atk.stagger()
             mod_dist = True

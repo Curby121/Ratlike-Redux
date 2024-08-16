@@ -41,6 +41,8 @@ class Entity(Viewable):
             **kwargs
         )
         return self.action
+    def get_dmg(self, atk) -> float:
+        raise NotImplementedError
 
 #TODO: deprecate and remove
 class Damageable(Entity):
@@ -67,7 +69,6 @@ class Damageable(Entity):
 class Action(Viewable):
     '''Combat specific actions. All actions have a source and can be targetted
     by Attacks'''
-    src:Damageable
     exh_cost:int = 0
     use_msg:str = None
     reach:int = 0
@@ -75,7 +76,7 @@ class Action(Viewable):
         self.eff: float = 1.0
         self.silent:bool = False
         super().__init__(**kwargs)
-        self.src = source
+        self.src:Damageable = source
     def resolve(self):
         '''Perform this action'''
         self.src.exhaust += self.exh_cost
@@ -102,7 +103,11 @@ class Action(Viewable):
             src = self.src
         elif isinstance(atk.src, Enemy):
             src = atk.src
-        dist = min(src.distance, atk.reach)
+        try:
+            dist = min(src.distance, atk.reach)
+        except Exception as e:
+            print(f'atk: {atk.src}, tgt:{self.src}')
+            raise e
         if dist_min != -1:
             dist = max(dist, dist_min)
         if dist_max != -1:
@@ -114,12 +119,11 @@ class Attack(Action):
     '''Attacks are an Action that have a target.\n
     All attacks have a damage, stagger, and reach'''
     reach:int
-    tgt:Damageable
     stagger_mod:float
     dmg_mod:float
     styles:list[str] = []
     def __init__(self, source:Entity, target:Damageable = None, **kwargs):
-        self.tgt = target
+        self.tgt:Damageable = target
         super().__init__(source = source, **kwargs)
         self.eff_r = self._get_eff_reach()
 
@@ -141,7 +145,8 @@ class Attack(Action):
         return min(self.reach, self.get_distance())
 
     def dmg(self) -> int:
-        return self.src.dmg_base * self.dmg_mod * self.eff
+        print(f' Dmg(): {self.src} deals {self.src.get_dmg(self)} x{self.dmg_mod} x{self.eff}')
+        return self.src.get_dmg(self) * self.dmg_mod * self.eff
     def stagger(self) -> int:
         return self.src.stagger_base * self.stagger_mod * self.eff
     
@@ -158,9 +163,8 @@ class Attack(Action):
 
 class Strategy:
     '''Base Class for enemy attack AI.'''
-    parent:Damageable
     def __init__(self, parent:Damageable) -> None:
-        self.parent = parent
+        self.parent:Damageable = parent
     def get_action(self) -> Action:
         '''Should always be overwritten by inhereted members'''
         return random.choice(self.parent.actions)[0]
@@ -169,17 +173,20 @@ class Enemy(Damageable):
     '''Base Class for enemies that the player will fight.\n
     These will show up in the enemy section of GUI,
     and will be given chances to attack'''
-    strategy:Strategy = Strategy
     actions:list[Action]
     weights:list[int]
     distance:int
+    strategy_class:Strategy
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.strategy = self.strategy(parent = self)
+        self.strategy:Strategy = self.strategy_class(parent = self)
         self.distance = 30
     def take_turn(self, player):
         atk = self.strategy.get_action()
         return super().take_turn(target = player, action_class = atk)
+    def get_dmg(self, atk:Attack = None) -> float:
+        print(f'get_dmg enemy : {self.dmg_base}')
+        return self.dmg_base
 
 class Item(Viewable):
     '''Base Class for entities that can be placed in players inventory\n
@@ -222,6 +229,7 @@ class Weapon(Equippable):
     '''Base class for all weapons.\n
     Weapons must have a style. Paradigm is melee by default'''
     attacks:list[Action]
+    dmg_base:int
     dodge_class:Attack = None
     def __init__(self, **kwargs):
         self.paradigm = 'melee'

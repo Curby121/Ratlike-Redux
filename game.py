@@ -7,7 +7,6 @@ import actions as actn
 import roomobjects as ro
 import rooms
 import player
-import enemies
 import weapons
 import GUI
 
@@ -22,7 +21,7 @@ class Game:
 
         #testing
         weapons.Dagger().equip(self.plr)
-        weapons.WoodenShield().equip(self.plr)
+        #weapons.WoodenShield().equip(self.plr)
 
     async def Start(self):
         '''Start and run game'''
@@ -55,6 +54,9 @@ class Game:
                 # TODO: comprehensive death checks
                 if a.src.hp <= 0:
                     continue
+                if a.src.exhaust >= a.src.max_exh:
+                    GUI.log(f'{a.src.name} stumbles...')
+                    continue
                 a.resolve()
                 await asyncio.sleep(.2) # animation delay
                 
@@ -81,6 +83,7 @@ class Game:
         if self.plr.exhaust >= self.plr.max_exh:
             self.select_player_action(actn.Rest)
             GUI.log('YOU ARE EXHAUSTED!\n')
+            await asyncio.sleep(1)
         await self.plr_event.wait() # wait for plr input
 
         # enemy actions

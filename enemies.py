@@ -11,7 +11,7 @@ class Rat(bc.Enemy):
     exh_rec = 9
     dmg_base = 3
     stagger_base = 4
-    strategy = st.Basic
+    strategy_class = st.Basic
     actions = [
         (actions.Bite, 3)
     ]
@@ -19,15 +19,15 @@ class Rat(bc.Enemy):
 class Goblin(bc.Enemy):
     name = 'Goblin'
     desc = 'A stinky goblin! Look out for it\'s pointy spear!'
-    max_hp = 26
-    max_exh = 45
+    max_hp = 18
+    max_exh = 35
     exh_rec = 7
     dmg_base = 4
     stagger_base = 10
-    strategy = st.Basic
+    strategy_class = st.Basic
     actions = [
-        (actions.Lunge, 60),
-        (actions.Jab, 30),
+        (actions.Poke, 60),
+        (actions.Stab, 30),
         (actions.Dodge, 50)
     ]
     
@@ -39,7 +39,7 @@ class Skeleton(bc.Enemy):
     exh_rec = 6
     dmg_base = 6
     stagger_base = 16
-    strategy = st.Basic
+    strategy_class = st.Basic
     actions = [
         (actions.Smash, 60),
         (actions.Stab, 40),
@@ -56,7 +56,7 @@ class CaveTroll(bc.Enemy):
     stagger_base = 26
     strategy = st.Troll
     actions = [
-        (actions.Jab, 40),
+        (actions.Bite, 40),
         (actions.TrollReady, 60)
     ]
 

@@ -9,7 +9,7 @@ class Player(bc.Damageable):
     stagger_base = 12
     def __init__(self):
         plr = {
-            'max_hp': 50,
+            'max_hp': 35,
             'max_exh': 100,
             'exh_rec': 10
         }
@@ -18,7 +18,7 @@ class Player(bc.Damageable):
         self.inv = []
         self.equipment:dict[str, bc.Weapon] = {
             'Primary': None,
-            'Secondary': weapons.WoodenShield()
+            'Secondary': None
         }
         self.action:bc.Action = None
 
@@ -68,3 +68,13 @@ class Player(bc.Damageable):
         acts.append(actions.Dodge)
         acts.append(actions.Rest)
         return acts
+    
+    def get_dmg(self, atk:bc.Attack) -> float:
+        # TODO: modifiers
+        for key, wep in self.equipment.items():
+            if wep is not None:
+                for a in wep.get_actions():
+                    if isinstance(atk, a):
+                        return wep.dmg_base
+        else:
+            raise Exception('Atk not found in eqp')

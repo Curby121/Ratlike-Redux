@@ -6,19 +6,22 @@ class Dagger(bc.Weapon):
     desc = 'Stick em with the pointy end!'
     slot = 'Primary'
     value = 5
+    dmg_base = 8
     attacks = [
+        actions.Slash,
         actions.Stab
     ]
-    dodge_class = actions.Jab
+    dodge_class = actions.Stab
 
 class Spear(bc.Weapon):
     name = 'Wooden Spear'
     desc = 'A long wooden sshaft with a sharp piece of iron lashed on top.'
     slot = 'Primary'
+    dmg_base = 8
     twohanded = True
     value = 15
     attacks = [
-        actions.Lunge,
+        actions.Poke,
         actions.Stab
     ]
     dodge_class = actions.Stab
