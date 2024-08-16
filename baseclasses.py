@@ -95,17 +95,19 @@ class Action(Viewable):
         self.src._take_damage(dmg, stagger)
         self.eff *= 1 -(stagger / self.src.max_exh)
         if mod_dist:
-            if isinstance(self.src, Enemy):
-                src = self.src
-            elif isinstance(atk.src, Enemy):
-                src = atk.src
-            dist = min(src.distance, atk.reach)
-            if dist_min != -1:
-                dist = max(dist, dist_min)
-            if dist_max != -1:
-                dist = min(dist, dist_max)
+            self.mod_distance(atk, dist_min, dist_max)
 
-            src.distance = dist   
+    def mod_distance(self, atk, dist_min:int = -1, dist_max:int = -1):
+        if isinstance(self.src, Enemy):
+            src = self.src
+        elif isinstance(atk.src, Enemy):
+            src = atk.src
+        dist = min(src.distance, atk.reach)
+        if dist_min != -1:
+            dist = max(dist, dist_min)
+        if dist_max != -1:
+            dist = min(dist, dist_max)
+        src.distance = dist
 
 # TODO: Damage calculation based on weapon / skills etc
 class Attack(Action):
@@ -126,21 +128,24 @@ class Attack(Action):
         if self.tgt is not None:
             self.tgt.action.attack(atk = self)
 
-    def _get_eff_reach(self) -> int:
+    def get_distance(self) -> int:
         if isinstance(self.tgt, Enemy):
-            return min(self.reach, self.tgt.distance)
+            return self.tgt.distance
         elif isinstance(self.src, Enemy):
-            return min(self.reach, self.src.distance)
+            return self.src.distance
         else:
             print(f'err, src {self.src}, tgt: {self.tgt}')
             raise NotImplementedError
+        
+    def _get_eff_reach(self) -> int:
+        return min(self.reach, self.get_distance())
+
     def dmg(self) -> int:
         return self.src.dmg_base * self.dmg_mod * self.eff
     def stagger(self) -> int:
         return self.src.stagger_base * self.stagger_mod * self.eff
     
     def __gt__(self, other):
-        print('greth')
         if not isinstance(other, Attack):
             raise ValueError
         if self.eff_r > other.eff_r:

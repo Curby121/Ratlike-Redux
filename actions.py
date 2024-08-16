@@ -80,16 +80,28 @@ class Dodge(bc.CounterAttack):
             self.use_msg = 'was too tired to dodge!'
             return super().attack(atk)
         if self._dodge_succeeds(atk):
-            GUI.log(f'   {atk.tgt.name} dodged the attack!')
+            GUI.log(f'  {atk.tgt.name} dodged the attack!')
             if not self.used and self.reaction_class is not None:
-                GUI.log(f'     and reacts!')
-                self.react(target = atk.src)
-                self.used = True
+                GUI.log(f'   and reacts!')
+                self.on_dodge(atk)
         else:
             return super().attack(atk)
-        
-    def resolve(self):
-        return super().resolve()
+
+    def on_dodge(self, atk:bc.Attack):
+        react:bool = True
+        atk.mod_distance(atk, dist_min = atk.reach + 1)
+        if 'quick' in atk.styles:
+            react = False
+        elif 'heavy' in atk.styles:
+            atk.mod_distance(atk,
+                             self.reaction_class.reach,
+                             self.reaction_class.reach)
+        if react:
+            if self.reaction_class.reach >= atk.get_distance():
+                self.used = True
+                self.react(target = atk.src)
+            else:
+                GUI.log(f'Enemy was out of your reaction\'s reach!')
 
     def _can_dodge(self) -> bool:
         if self.src.exhaust >= self.src.max_exh:
@@ -98,7 +110,6 @@ class Dodge(bc.CounterAttack):
         else:
             return True
     def _dodge_succeeds(self, atk: bc.Attack) -> bool:
-        roll = random.randint(1,100)
         if 'heavy' in atk.styles:
             return True
         roll = random.choice(range(10))

@@ -29,45 +29,10 @@ class Game:
         GUI.init(self)
         t1 = asyncio.create_task( GUI.run() )
 
-        room2 = bc.Room(
-            centerpiece = ro.Chest(
-                contents = [
-                    weapons.Dagger()
-                ]
-            )
-        )
-        room1 = bc.Room(
-            conn_rooms = {
-                'n':room2
-            },
-            enemies = [
-                enemies.Goblin()
-            ]
-        )
-        room2.add_exit('s', room1)
-
         room = rooms.LabyrinthRoom()
-        
         room.enter(self)
 
-        enemy = enemies.Goblin()
         while True:
-            while enemy is None:
-                x = input('Wep (da/sp), Enemy (g/s/t):')
-                if x == 'da':
-                    weapons.Dagger().equip(self.plr)
-                    weapons.WoodenShield().equip(self.plr)
-                elif x == 'sp':
-                    weapons.Spear().equip(self.plr)
-                elif x == 'g':
-                    enemy = enemies.Goblin()
-                elif x == 's':
-                    enemy = enemies.Skeleton()
-                elif x == 't':
-                    enemy = enemies.CaveTroll()
-                else:
-                    print('crimnge')
-
             await self.EnterRoom()
             await self.plr_event.wait()
             self.plr_event.clear()
