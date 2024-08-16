@@ -179,7 +179,7 @@ class CombatWindow(BaseWindow):
         actn_bar = self.ActionBar(self, plr_actions)
         actn_bar.place(relx=0.5, rely=0.75, anchor='center')
         self.plr_stats = self.PlrStats(self)
-        self.plr_stats.place(rely=0.6, relx=0.5, anchor='center', width = 250, height=70)
+        self.plr_stats.place(rely=0.6, relx=0.5, anchor='center', width = 260, height=70)
         self.enemy_stats = self.EnemyStats(self, enemies[0])
         self.enemy_stats.place(rely=0.25, relx=0.5, anchor='center')
 

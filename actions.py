@@ -69,7 +69,7 @@ class Dodge(bc.CounterAttack):
     desc = 'Dodge incoming attacks this turn'
     use_msg = 'jumps back!'
     reach = 0
-    exh_cost = 25 # each dodge adds more stagger
+    exh_cost = 25
     def __init__(self, source: bc.Entity, **kwargs):
         super().__init__(source.get_reaction(), source, **kwargs)
         self.used:bool = False
@@ -83,11 +83,12 @@ class Dodge(bc.CounterAttack):
             GUI.log(f'  {atk.tgt.name} dodged the attack!')
             if not self.used and self.reaction_class is not None:
                 GUI.log(f'   and reacts!')
-                self.on_dodge(atk)
+                self.on_reaction(atk)
         else:
             return super().attack(atk)
 
-    def on_dodge(self, atk:bc.Attack):
+    def on_reaction(self, atk:bc.Attack):
+        '''Called when a reaction occurs'''
         react:bool = True
         atk.mod_distance(atk, dist_min = atk.reach + 1)
         if 'quick' in atk.styles:
@@ -99,7 +100,7 @@ class Dodge(bc.CounterAttack):
         if react:
             if self.reaction_class.reach >= atk.get_distance():
                 self.used = True
-                self.react(target = atk.src)
+                return self.react(target = atk.src)
             else:
                 GUI.log(f'Enemy was out of your reaction\'s reach!')
 
