@@ -35,6 +35,7 @@ class BaseWindow(tk.Canvas):
 
     def Updt(*args):
         '''Override in inhereted classes to update indo every frame'''
+        # TODO: add updates
         pass
     
     class Log(tk.Canvas):
@@ -57,27 +58,28 @@ class BaseWindow(tk.Canvas):
             self.text.see(tk.END)
             self.text.config(state = tk.DISABLED) # stops from being able to type into
 
-class ObjectBar(ttk.Frame):
+class ObjectBar(tk.Frame):
     objs:list[ttk.Frame] = None
     def set_frames(self, objects:list[ttk.Frame] = None):
+        self.configure(bg='black')
         self.objs:list[ttk.Frame] = objects
         for i,a in enumerate(self.objs):
             self.columnconfigure(i, weight=1)
-            a.grid(row = 0, column = i, ipadx=3)
+            a.grid(row = 0, column = i, padx=3)
 
 class RoomWindow(BaseWindow):
     '''Dungeon Room view. Rooms can contain a centerpiece, exits, and ground objects'''
     def __init__(self, room):
         super().__init__()
-        exits = []
+        exits:list = []
         centerpiece = room.centerpiece
         grounds = []
 
-        exit_bar = ObjectBar(self)
+        exit_canvas = tk.Frame(bg='black')
         ground_bar = ObjectBar(self)
 
         for e in room.exits:
-            exits.append(self.Exit(exit_bar, e))
+            exits.append(self.Exit(exit_canvas, e))
         for obj in room.floor_objects:
             grounds.append(self.Object(ground_bar, obj))
         for item in room.floor_items:
@@ -89,8 +91,9 @@ class RoomWindow(BaseWindow):
             centerpiece_lab.place(relx=0.5,rely=0.5, anchor = 'center')
 
         if len(exits) > 0:
-            exit_bar.set_frames(exits)
-            exit_bar.place(relx=0.5,rely=0.05, anchor='n')
+            exit_canvas.place(relx=0.5, rely=0.05, anchor='n')
+            for e in exits:
+                e.grid(row=e.pos[1], column=e.pos[0])
         if len(grounds) > 0:
             ground_bar.set_frames(grounds)
             ground_bar.place(relx=0.5,rely=0.95, anchor='s')
@@ -100,23 +103,27 @@ class RoomWindow(BaseWindow):
             super().__init__(root)
             self.exit = exit
             dir:str = self.exit.direction
-            long_dir = ''
-            while len(dir) > 0:
-                if dir[0] == 'n':
-                    long_dir += 'North'
-                elif dir[0] == 's':
-                    long_dir += 'South'
-                elif dir[0] == 'e':
-                    long_dir += 'East'
-                elif dir[0] == 'w':
-                    long_dir += 'West'
-                dir = dir[1:]
-            but = ttk.Button(
+            name = ''
+            self.pos:list[int] = [1, 1] # center of 3x3
+            if dir[0] == 'n':
+                name += 'North'
+                self.pos[1] += -1
+            elif dir[0] == 's':
+                name += 'South'
+                self.pos[1] += 1
+
+            elif dir[0] == 'e':
+                name += 'East'
+                self.pos[0] += 1
+            elif dir[0] == 'w':
+                name += 'West'
+                self.pos[0] += -1
+            self.but = ttk.Button(
                 self,
-                text = long_dir,
+                text = name,
                 command = self.move
             )
-            but.pack(ipady=25)
+            self.but.pack(ipady=15)
         def move(self):
             global game
             self.exit.dest_room.enter(game)
@@ -172,14 +179,19 @@ class CombatWindow(BaseWindow):
         actn_bar = self.ActionBar(self, plr_actions)
         actn_bar.place(relx=0.5, rely=0.75, anchor='center')
         self.plr_stats = self.PlrStats(self)
-        self.plr_stats.place(rely=0.6, relx=0.5, anchor='center', relwidth=0.35, relheight=0.1)
+        self.plr_stats.place(rely=0.6, relx=0.5, anchor='center', width = 250, height=70)
         self.enemy_stats = self.EnemyStats(self, enemies[0])
         self.enemy_stats.place(rely=0.25, relx=0.5, anchor='center')
+
+        self.dist_L = ttk.Label(self, font=('Arial', 14), padding = 4)
+        self.dist_L.place(relx=0.5, rely=0.38, anchor='center')
+
         self.Updt()
 
     def Updt(self):
         self.plr_stats.update()
         self.enemy_stats.update()
+        self.dist_L.configure(text = f'Dist: {self.enemy_stats.enemy.distance}')
     
     class PlrStats(ttk.Frame):
         def __init__(self, root):
@@ -206,16 +218,14 @@ class CombatWindow(BaseWindow):
             self.label.grid(row=0, column=0)
             self.hp_L = ttk.Label(self, font=('Arial', 14))
             self.exh_L = ttk.Label(self, font=('Arial', 14))
-            self.dist_L = ttk.Label(self, font=('Arial', 14))
             self.hp_L.grid(row=1, column=0)
             self.exh_L.grid(row=2, column=0)
-            self.dist_L.grid(row=4, column=0)
             self.x_B = ttk.Button(self, text='Examine', command = self.examine)
             self.x_B.grid(row=3, column=0)
         def update(self):
             self.hp_L.configure(text = f'HP: {self.enemy.hp}/{self.enemy.max_hp}')
             self.exh_L.configure(text = f'Ex: {self.enemy.exhaust}/{self.enemy.max_exh}')
-            self.dist_L.configure(text = f'Dist: {self.enemy.distance}')
+            
         def examine(self):
             log(self.enemy.desc)
 
@@ -250,6 +260,7 @@ class CombatWindow(BaseWindow):
                 global game
                 game.select_player_action(self.action)
             def examine_action(self):
+                log('')
                 log(f'{self.action.name}: \n{self.action.desc}')
                 log(f'  Exhaustion Cost: {self.action.exh_cost}')
                 if hasattr(self.action, 'reach'):
