@@ -29,7 +29,7 @@ class Stab(bc.Attack):
     desc = 'A hard stab'
     use_msg = 'stabs quickly!'
     dmg_mod = 1.0
-    stagger_mod = 0.75
+    stagger_mod = 0.5
     reach = 3
     exh_cost = 12
     styles = ['quick']
@@ -47,7 +47,7 @@ class Jab(bc.Attack):
 
 class Poke(bc.Attack):
     '''High range high stagger spear attack'''
-    name = 'Lunge'
+    name = 'Poke'
     desc = 'Poke their eyes out, kid!'
     use_msg = 'poked with their spear!'
     dmg_mod = 1.5
@@ -111,6 +111,7 @@ class Dodge(bc.CounterAttack):
             GUI.log(f'  {atk.tgt.name} failed to dodge!')
             return super().attack(atk)
 
+    # TODO: quick/heavy adj.
     def on_reaction(self, atk:bc.Attack):
         '''Called when a reaction occurs'''
         if 'quick' in atk.styles:

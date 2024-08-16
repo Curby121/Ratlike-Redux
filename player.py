@@ -6,11 +6,11 @@ class Player(bc.Damageable):
     name = 'Player'
     desc = 'You!'
     dmg_base = 6
-    stagger_base = 12
+    stagger_base = 10
     def __init__(self):
         plr = {
             'max_hp': 35,
-            'max_exh': 100,
+            'max_exh': 60,
             'exh_rec': 10
         }
         super().__init__(**plr)

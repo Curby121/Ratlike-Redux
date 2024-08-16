@@ -20,7 +20,8 @@ class Game:
         self.plr_event = asyncio.Event()
 
         #testing
-        weapons.Dagger().equip(self.plr)
+        #weapons.Dagger().equip(self.plr)
+        weapons.Spear().equip(self.plr)
         #weapons.WoodenShield().equip(self.plr)
 
     async def Start(self):

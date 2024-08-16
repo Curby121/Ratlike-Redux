@@ -8,7 +8,7 @@ class Rat(bc.Enemy):
     desc = 'It thinks it\'s the main character'
     max_hp = 18
     max_exh = 50
-    exh_rec = 11
+    exh_rec = 15
     dmg_base = 8
     stagger_base = 4
     strategy_class = st.Basic

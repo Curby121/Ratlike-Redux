@@ -17,7 +17,7 @@ class Spear(bc.Weapon):
     name = 'Wooden Spear'
     desc = 'A long wooden sshaft with a sharp piece of iron lashed on top.'
     slot = 'Primary'
-    dmg_base = 8
+    dmg_base = 5
     twohanded = True
     value = 15
     attacks = [

@@ -167,8 +167,9 @@ class Attack(Action):
     def dmg(self) -> int:
         print(f' Dmg(): {self.src} deals {self.src.get_dmg(self)} x{self.dmg_mod} x{self.eff}')
         return self.src.get_dmg(self) * self.dmg_mod * self.eff
+    # stagger not effected by eff ?
     def stagger(self) -> int:
-        return self.src.stagger_base * self.stagger_mod * self.eff
+        return self.src.stagger_base * self.stagger_mod
     
     def __gt__(self, other):
         if not isinstance(other, Attack):
