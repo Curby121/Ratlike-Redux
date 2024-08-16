@@ -35,7 +35,7 @@ class Entity(Viewable):
         return None
     def take_turn(self):
         raise Exception(f'No turn defined for {self.name}')
-    def take_turn(self, action_class, **kwargs):
+    def set_action(self, action_class, **kwargs):
         self.action = action_class(
             source = self,
             **kwargs
@@ -87,40 +87,59 @@ class Action(Viewable):
                stagger_mod:float = 1.0,
                mod_dist:bool = True,
                dist_max:int = -1,
-               dist_min:int = -1
+               dist_min:int = -1,
+               move:int = 0
                ):
         '''Attack the source of this action. This function can be overridden
         on actions that interrupt incoming attacks'''
         dmg = int(atk.dmg() * dmg_mod)
         stagger = int(atk.stagger() * stagger_mod)
         self.src._take_damage(dmg, stagger)
+        self.eff *= 1 -(dmg / self.src.max_hp)
         self.eff *= 1 -(stagger / self.src.max_exh)
         if mod_dist:
-            self.mod_distance(atk, dist_min, dist_max)
+            self.mod_distance(atk,
+                              change = move,
+                              dist_min = dist_min,
+                              dist_max = dist_max)
 
-    def mod_distance(self, atk, dist_min:int = -1, dist_max:int = -1):
+    def mod_distance(
+            self,
+            atk,
+            atk_mod:bool = True, # stops the atk.reach from modifying the distance
+            change:int = 0,
+            dist_min:int = 0,
+            dist_max:int = -1
+            ):
+        if self is atk:
+            raise Exception('mod_distance called with atk as self')
         if isinstance(self.src, Enemy):
-            src = self.src
+            enemy = self.src
         elif isinstance(atk.src, Enemy):
-            src = atk.src
+            enemy = atk.src
         try:
-            dist = min(src.distance, atk.reach)
+            enemy.distance += change
+            dist = enemy.distance
+            if atk_mod:
+                dist = min(enemy.distance, atk.reach)
         except Exception as e:
-            print(f'atk: {atk.src}, tgt:{self.src}')
+            print(f'Atks: atk:{atk}, tgt:{self}')
+            print(f'Sources: atk:{atk.src}, tgt:{self.src}')
             raise e
-        if dist_min != -1:
-            dist = max(dist, dist_min)
+        dist = max(dist, dist_min)
         if dist_max != -1:
             dist = min(dist, dist_max)
-        src.distance = dist
+        enemy.distance = dist
 
 # TODO: Damage calculation based on weapon / skills etc
+# TODO: tie weapon to attack (as source)
 class Attack(Action):
     '''Attacks are an Action that have a target.\n
     All attacks have a damage, stagger, and reach'''
     reach:int
     stagger_mod:float
     dmg_mod:float
+    move:int = 0 # amount it moves forward after resolving
     styles:list[str] = []
     def __init__(self, source:Entity, target:Damageable = None, **kwargs):
         self.tgt:Damageable = target
@@ -129,6 +148,7 @@ class Attack(Action):
 
     def resolve(self):
         super().resolve()
+        self.tgt.action.mod_distance(self, change = self.move)
         if self.tgt is not None:
             self.tgt.action.attack(atk = self)
 
@@ -181,9 +201,10 @@ class Enemy(Damageable):
         super().__init__(**kwargs)
         self.strategy:Strategy = self.strategy_class(parent = self)
         self.distance = 30
-    def take_turn(self, player):
-        atk = self.strategy.get_action()
-        return super().take_turn(target = player, action_class = atk)
+    def take_turn(self, player, action_class = None):
+        if action_class is None:
+            action_class = self.strategy.get_action()
+        return self.set_action(target = player, action_class = action_class)
     def get_dmg(self, atk:Attack = None) -> float:
         print(f'get_dmg enemy : {self.dmg_base}')
         return self.dmg_base

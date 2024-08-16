@@ -54,11 +54,12 @@ class Game:
                 # TODO: comprehensive death checks
                 if a.src.hp <= 0:
                     continue
-                if a.src.exhaust >= a.src.max_exh:
+                if a.src.exhaust >= a.src.max_exh and\
+                    not isinstance(a, actn.Rest):
                     GUI.log(f'{a.src.name} stumbles...')
                     continue
                 a.resolve()
-                await asyncio.sleep(.2) # animation delay
+                await asyncio.sleep(.5) # animation delay
                 
             # new turn bookkeeping
             i = 0
@@ -89,14 +90,15 @@ class Game:
         # enemy actions
         for e in room.enemies:
             if e.exhaust >= e.max_exh:
-                actions.append(actn.Rest(e))
-            else:
-                actions.append(e.take_turn(self.plr))
+                e.take_turn(self.plr, actn.Dodge)
+            actions.append(e.take_turn(self.plr))
         actions = sort_actions(self.plr_action, actions)
+        print(f'get_actions = {actions}')
         return actions
 
     def select_player_action(self, action:bc.Action):
         '''Sets player combat action.'''
+        print(f'Player tgt:{self.room.enemies[0]}')
         self.plr_action = action(
             source = self.plr,
             target = self.room.enemies[0]

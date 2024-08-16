@@ -76,5 +76,7 @@ class Player(bc.Damageable):
                 for a in wep.get_actions():
                     if isinstance(atk, a):
                         return wep.dmg_base
+                if isinstance(atk, wep.dodge_class):
+                    return wep.dmg_base
         else:
             raise Exception('Atk not found in eqp')

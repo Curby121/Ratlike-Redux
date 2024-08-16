@@ -11,7 +11,7 @@ class Dagger(bc.Weapon):
         actions.Slash,
         actions.Stab
     ]
-    dodge_class = actions.Stab
+    dodge_class = actions.Jab
 
 class Spear(bc.Weapon):
     name = 'Wooden Spear'

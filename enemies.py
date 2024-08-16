@@ -6,20 +6,24 @@ import actions
 class Rat(bc.Enemy):
     name = 'Rat'
     desc = 'It thinks it\'s the main character'
-    max_hp = 6
-    max_exh = 70
-    exh_rec = 9
-    dmg_base = 3
+    max_hp = 18
+    max_exh = 50
+    exh_rec = 11
+    dmg_base = 8
     stagger_base = 4
     strategy_class = st.Basic
     actions = [
-        (actions.Bite, 3)
+        (actions.Bite, 3),
+        (actions.RatJump, 10),
+        (actions.Dodge, 10)
     ]
+    def get_reaction(self):
+        return actions.Bite
     
 class Goblin(bc.Enemy):
     name = 'Goblin'
     desc = 'A stinky goblin! Look out for it\'s pointy spear!'
-    max_hp = 18
+    max_hp = 22
     max_exh = 35
     exh_rec = 7
     dmg_base = 4
@@ -34,7 +38,7 @@ class Goblin(bc.Enemy):
 class Skeleton(bc.Enemy):
     name = 'Skeleton'
     desc = 'Rattling bones and a sturdy club.'
-    max_hp = 22
+    max_hp = 30
     max_exh = 75
     exh_rec = 6
     dmg_base = 6

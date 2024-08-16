@@ -35,7 +35,7 @@ class Stab(bc.Attack):
     styles = ['quick']
 
 class Jab(bc.Attack):
-    '''Default reaction for daggers. Goblin standard attack'''
+    '''Default reaction for daggers.'''
     name = 'Jab'
     desc = 'A quick jab'
     use_msg = 'jabs at their opponent!'
@@ -70,10 +70,20 @@ class Bite(bc.Attack):
     name = 'Bite'
     desc = 'Chomp!'
     use_msg = 'bites ferociously!'
-    dmg_mod = 0.3
+    dmg_mod = 0.5
     stagger_mod = 0.3
     reach = 3
     exh_cost = 3
+
+class RatJump(bc.Attack):
+    name = 'Leap'
+    desc = 'Munch'
+    use_msg = 'leapt forward'
+    dmg_mod = 1.0
+    stagger_mod = 2.0
+    reach = 4
+    move = -1
+    exh_cost = 18
 
 class Dodge(bc.CounterAttack):
     '''Standard Dodge action. Checks for a reaction_class on it\'s source.'''
@@ -82,6 +92,7 @@ class Dodge(bc.CounterAttack):
     use_msg = 'jumps back!'
     reach = 0
     exh_cost = 25
+    dodge_move = 1
     def __init__(self, source: bc.Entity, **kwargs):
         super().__init__(source.get_reaction(), source, **kwargs)
         self.used:bool = False
@@ -93,29 +104,33 @@ class Dodge(bc.CounterAttack):
             return super().attack(atk)
         if self._dodge_succeeds(atk):
             GUI.log(f'  {atk.tgt.name} dodged the attack!')
-            atk.mod_distance(atk, dist_min = atk.reach + 1)
+            self.mod_distance(atk, dist_min = atk.reach + 1)
             if not self.used and self.reaction_class is not None:
                 self.on_reaction(atk)
-            
         else:
+            GUI.log(f'  {atk.tgt.name} failed to dodge!')
             return super().attack(atk)
 
     def on_reaction(self, atk:bc.Attack):
         '''Called when a reaction occurs'''
-        react:bool = True
         if 'quick' in atk.styles:
-            react = False
-        elif 'heavy' in atk.styles:
-            atk.mod_distance(atk,
-                             self.reaction_class.reach,
-                             self.reaction_class.reach)
-        if react:
-            GUI.log(f'   and reacts!')
-            if self.reaction_class.reach >= atk.get_distance():
-                self.used = True
-                return self.react(target = atk.src)
-            else:
-                GUI.log(f'Enemy was out of your reaction\'s reach!')
+            pass # no dodge movement on quicks
+        elif 'heavy' in atk.styles or\
+            abs(self.reaction_class.reach - atk.get_distance()) <= self.dodge_move:
+            self.mod_distance(atk,
+                             dist_min= self.reaction_class.reach,
+                             dist_max= self.reaction_class.reach)
+        elif atk.get_distance() > self.reaction_class.reach:
+            self.mod_distance(atk, change = -self.dodge_move, atk_mod = False)
+
+        # TODO: dodge backwards?
+
+        GUI.log(f'   and reacts!')
+        if self.reaction_class.reach >= atk.get_distance():
+            self.used = True
+            return self.react(target = atk.src)
+        else:
+            GUI.log(f'Enemy was out of {self.src.name}\'s reaction reach!')
 
     def _can_dodge(self) -> bool:
         if self.src.exhaust >= self.src.max_exh:
