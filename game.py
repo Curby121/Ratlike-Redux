@@ -20,8 +20,8 @@ class Game:
         self.plr_event = asyncio.Event()
 
         #testing
-        #weapons.Dagger().equip(self.plr)
-        weapons.Spear().equip(self.plr)
+        weapons.Dagger().equip(self.plr)
+        #weapons.Spear().equip(self.plr)
         #weapons.WoodenShield().equip(self.plr)
 
     async def Start(self):
@@ -99,7 +99,6 @@ class Game:
 
     def select_player_action(self, action:bc.Action):
         '''Sets player combat action.'''
-        print(f'Player tgt:{self.room.enemies[0]}')
         self.plr_action = action(
             source = self.plr,
             target = self.room.enemies[0]

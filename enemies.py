@@ -8,7 +8,7 @@ class Rat(bc.Enemy):
     desc = 'It thinks it\'s the main character'
     max_hp = 18
     max_exh = 50
-    exh_rec = 15
+    exh_rec = 8
     dmg_base = 8
     stagger_base = 4
     strategy_class = st.Basic
@@ -24,15 +24,14 @@ class Goblin(bc.Enemy):
     name = 'Goblin'
     desc = 'A stinky goblin! Look out for it\'s pointy spear!'
     max_hp = 22
-    max_exh = 35
-    exh_rec = 7
+    max_exh = 45
+    exh_rec = 4
     dmg_base = 4
     stagger_base = 10
     strategy_class = st.Basic
     actions = [
-        (actions.Poke, 60),
-        (actions.Stab, 30),
-        (actions.Dodge, 50)
+        (actions.Lunge, 60),
+        (actions.Stab, 30)
     ]
     
 class Skeleton(bc.Enemy):
@@ -40,7 +39,7 @@ class Skeleton(bc.Enemy):
     desc = 'Rattling bones and a sturdy club.'
     max_hp = 30
     max_exh = 75
-    exh_rec = 6
+    exh_rec = 4
     dmg_base = 6
     stagger_base = 16
     strategy_class = st.Basic

@@ -10,8 +10,8 @@ class Player(bc.Damageable):
     def __init__(self):
         plr = {
             'max_hp': 35,
-            'max_exh': 60,
-            'exh_rec': 10
+            'max_exh': 50,
+            'exh_rec': 5
         }
         super().__init__(**plr)
         self.coins = 0
@@ -69,6 +69,17 @@ class Player(bc.Damageable):
         acts.append(actions.Rest)
         return acts
     
+    def get_weapon_with_attack(self, atk:bc.Attack) -> bc.Weapon:
+        for key, wep in self.equipment.items():
+            if wep is not None:
+                for a in wep.get_actions():
+                    if isinstance(atk, a):
+                        return wep
+                if isinstance(atk, wep.dodge_class):
+                    return wep
+        else:
+            raise Exception('Atk not found in eqp')
+
     def get_dmg(self, atk:bc.Attack) -> float:
         # TODO: modifiers
         for key, wep in self.equipment.items():
@@ -80,3 +91,6 @@ class Player(bc.Damageable):
                     return wep.dmg_base
         else:
             raise Exception('Atk not found in eqp')
+        
+    def get_atk_source(self, atk) -> float:
+        return self.get_weapon_with_attack(atk)

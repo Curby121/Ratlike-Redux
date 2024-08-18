@@ -16,41 +16,48 @@ class Slash(bc.Attack):
     Med range, low damage, med stagger'''
     name = 'Slash'
     desc = 'The simplest of blade techniques'
-    use_msg = 'slashes'
+    use_msg = 'slashes.'
     dmg_mod = 0.8
     stagger_mod = 1.0
+    parry = 5
+    acc = 3
     reach = 5
-    exh_cost = 12
+    exh_cost = 10
 
 class Stab(bc.Attack):
     '''Default attack for daggers and knives
-    Short range, good damage, low stagger'''
+    Short range, good acc, low stagger'''
     name = 'Stab'
     desc = 'A hard stab'
-    use_msg = 'stabs quickly!'
+    use_msg = 'stabs quickly.'
     dmg_mod = 1.0
+    parry = 3
+    acc = 7
     stagger_mod = 0.5
+    reach = 3
+    exh_cost = 7
+    styles = ['quick']
+
+class DaggerStab(bc.Attack):
+    '''Signature finisher for daggers.'''
+    name = 'Sink Blade'
+    desc = 'A lethal stab'
+    use_msg = 'throws their dagger forwards'
+    dmg_mod = 1.2
+    parry = 1
+    acc = 3
+    stagger_mod = 0.1
     reach = 3
     exh_cost = 12
-    styles = ['quick']
 
-class Jab(bc.Attack):
-    '''Default reaction for daggers.'''
-    name = 'Jab'
-    desc = 'A quick jab'
-    use_msg = 'jabs at their opponent!'
-    dmg_mod = 0.6
-    stagger_mod = 0.5
-    reach = 3
-    exh_cost = 6
-    styles = ['quick']
-
-class Poke(bc.Attack):
+class Lunge(bc.Attack):
     '''High range high stagger spear attack'''
     name = 'Poke'
     desc = 'Poke their eyes out, kid!'
     use_msg = 'poked with their spear!'
     dmg_mod = 1.5
+    parry = 2
+    acc = 8
     stagger_mod = 1.2
     reach = 10
     exh_cost = 17
@@ -61,6 +68,8 @@ class Smash(bc.Attack):
     desc = 'A powerful overhead slam!'
     use_msg = 'smashed viciously!'
     dmg_mod = 1
+    parry = 2
+    acc = 10
     stagger_mod = 1.5
     reach = 7
     exh_cost = 17
@@ -71,6 +80,8 @@ class Bite(bc.Attack):
     desc = 'Chomp!'
     use_msg = 'bites ferociously!'
     dmg_mod = 0.5
+    parry = 1
+    acc = 10
     stagger_mod = 0.3
     reach = 3
     exh_cost = 3
@@ -80,6 +91,8 @@ class RatJump(bc.Attack):
     desc = 'Munch'
     use_msg = 'leapt forward'
     dmg_mod = 1.0
+    parry = 5
+    acc = 10
     stagger_mod = 2.0
     reach = 4
     move = -1
@@ -91,17 +104,17 @@ class Dodge(bc.CounterAttack):
     desc = 'Dodge incoming attacks this turn'
     use_msg = 'jumps back!'
     reach = 0
-    exh_cost = 25
+    exh_cost = 15
     dodge_move = 1
     def __init__(self, source: bc.Entity, **kwargs):
         super().__init__(source.get_reaction(), source, **kwargs)
         self.used:bool = False
 
-    def attack(self, atk: bc.Attack):
+    def attack_me(self, atk: bc.Attack):
         self.silent = True
         if not self._can_dodge():
             self.use_msg = 'was too tired to dodge!'
-            return super().attack(atk)
+            return self.damage_me(atk)
         if self._dodge_succeeds(atk):
             GUI.log(f'  {atk.tgt.name} dodged the attack!')
             self.mod_distance(atk, dist_min = atk.reach + 1)
@@ -109,7 +122,7 @@ class Dodge(bc.CounterAttack):
                 self.on_reaction(atk)
         else:
             GUI.log(f'  {atk.tgt.name} failed to dodge!')
-            return super().attack(atk)
+            return self.damage_me(atk)
 
     # TODO: quick/heavy adj.
     def on_reaction(self, atk:bc.Attack):
@@ -155,23 +168,23 @@ class Dodge(bc.CounterAttack):
 class Block(bc.Action):
     name = 'Block'
     desc = 'Shields Up!'
-    def attack(self, atk:bc.Attack):
+    def attack_me(self, atk:bc.Attack):
         GUI.log(' The attack is blocked!')
         dmg_m = 0.35
         stgr_m = 0.5
         mod_dist = True
         min_dist = 5
-        reflected_stagger = 0.4 * atk.stagger()
+        reflected_stagger = 0.4 * atk.get_stagger()
         if 'heavy' in atk.styles:
             dmg_m *= 1.75
             stgr_m *= 1.8
-            reflected_stagger = 0.7 * atk.stagger()
+            reflected_stagger = 0.7 * atk.get_stagger()
             mod_dist = True
             min_dist = atk.reach # push back to 
         if 'quick' in atk.styles:
             dmg_m *= 0.8
             reflected_stagger = 10
-        super().attack(atk,
+        self.damage_me(atk,
                        dmg_mod = dmg_m,
                        stagger_mod = stgr_m,
                        mod_dist = mod_dist,

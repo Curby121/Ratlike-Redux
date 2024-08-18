@@ -7,11 +7,13 @@ class Dagger(bc.Weapon):
     slot = 'Primary'
     value = 5
     dmg_base = 8
+    parry_mod = 0.2
     attacks = [
         actions.Slash,
-        actions.Stab
+        actions.Stab,
+        actions.DaggerStab
     ]
-    dodge_class = actions.Jab
+    dodge_class = actions.Stab
 
 class Spear(bc.Weapon):
     name = 'Wooden Spear'
@@ -20,8 +22,9 @@ class Spear(bc.Weapon):
     dmg_base = 5
     twohanded = True
     value = 15
+    parry_mod = 0.5
     attacks = [
-        actions.Poke,
+        actions.Lunge,
         actions.Stab
     ]
     dodge_class = actions.Stab
@@ -31,6 +34,7 @@ class WoodenShield(bc.Weapon):
     desc = 'A small round wooden shield.'
     slot = 'Secondary'
     value = 50
+    parry_mod = 1.5
     attacks = [
         actions.Block
     ]

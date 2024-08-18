@@ -41,7 +41,8 @@ class Entity(Viewable):
             **kwargs
         )
         return self.action
-    def get_dmg(self, atk) -> float:
+    def get_atk_source(self, atk) -> float:
+        '''On the player this returns the weapon, on enemies it returns the enemy'''
         raise NotImplementedError
 
 #TODO: deprecate and remove
@@ -57,10 +58,15 @@ class Damageable(Entity):
             raise Exception(f'Damageable must be initialized with max_hp stat')
         self.hp:int = self.max_hp
         self.exhaust = 0
+
     def _take_damage(self, dmg:int, stgr:int):
         self.hp -= dmg
         self.exhaust += stgr
-        GUI.log(f'  {self.name} took {dmg} dmg, {stgr} stgr!')
+        if dmg == 0:
+            GUI.log(f'  {stgr} stagger!')
+        else:
+            GUI.log(f'  {self.name} took {dmg} dmg, {stgr} stgr!')
+
     def new_turn(self):
         '''Reset bookkeeping for next turn'''
         self.exhaust = max(0, self.exhaust - self.exh_rec)
@@ -82,7 +88,12 @@ class Action(Viewable):
         self.src.exhaust += self.exh_cost
         if self.use_msg is not None and not self.silent:
             GUI.log(f'{self.src.name} {self.use_msg}')
-    def attack(self, atk,
+    
+    def attack_me(self, **kwargs):
+        self.damage_me(**kwargs)
+
+    #TODO: separate out to other fns, leave this as a not impl
+    def damage_me(self, atk,
                dmg_mod:float = 1.0,
                stagger_mod:float = 1.0,
                mod_dist:bool = True,
@@ -92,8 +103,8 @@ class Action(Viewable):
                ):
         '''Attack the source of this action. This function can be overridden
         on actions that interrupt incoming attacks'''
-        dmg = int(atk.dmg() * dmg_mod)
-        stagger = int(atk.stagger() * stagger_mod)
+        dmg = int(atk.get_dmg() * dmg_mod)
+        stagger = int(atk.get_stagger() * stagger_mod)
         self.src._take_damage(dmg, stagger)
         self.eff *= 1 -(dmg / self.src.max_hp)
         self.eff *= 1 -(stagger / self.src.max_exh)
@@ -137,20 +148,40 @@ class Attack(Action):
     '''Attacks are an Action that have a target.\n
     All attacks have a damage, stagger, and reach'''
     reach:int
+    acc:int
+    parry:int
     stagger_mod:float
     dmg_mod:float
     move:int = 0 # amount it moves forward after resolving
     styles:list[str] = []
-    def __init__(self, source:Entity, target:Damageable = None, **kwargs):
+    def __init__(self, source:Entity, target:Damageable, **kwargs):
         self.tgt:Damageable = target
+        source: Enemy
         super().__init__(source = source, **kwargs)
         self.eff_r = self._get_eff_reach()
+        self.parry = int(source.get_atk_source(self).parry_mod * self.parry)
+        self.parry = max(1, self.parry)
 
     def resolve(self):
         super().resolve()
         self.tgt.action.mod_distance(self, change = self.move)
         if self.tgt is not None:
-            self.tgt.action.attack(atk = self)
+            self.tgt.action.attack_me(atk = self)
+
+    def attack_me(self, atk):
+        def_roll = random.randint(1, self.parry)
+        off_roll = random.randint(1, atk.acc)
+        print(f'stgr mod off/def: {off_roll} / {def_roll}')
+        if def_roll >= off_roll / 2:
+            GUI.log(' The attack is parried.')
+            return self.damage_me(
+                atk,
+                dmg_mod = 0,
+                stagger_mod = min(1.0, off_roll / def_roll)
+                )
+        else:
+            GUI.log(' The attack slips though!')
+        return self.damage_me(atk)
 
     def get_distance(self) -> int:
         if isinstance(self.tgt, Enemy):
@@ -164,11 +195,11 @@ class Attack(Action):
     def _get_eff_reach(self) -> int:
         return min(self.reach, self.get_distance())
 
-    def dmg(self) -> int:
-        print(f' Dmg(): {self.src} deals {self.src.get_dmg(self)} x{self.dmg_mod} x{self.eff}')
-        return self.src.get_dmg(self) * self.dmg_mod * self.eff
+    def get_dmg(self) -> int:
+        self.src: Enemy
+        return self.src.get_atk_source(self).dmg_base * self.dmg_mod * self.eff
     # stagger not effected by eff ?
-    def stagger(self) -> int:
+    def get_stagger(self) -> int:
         return self.src.stagger_base * self.stagger_mod
     
     def __gt__(self, other):
@@ -196,19 +227,19 @@ class Enemy(Damageable):
     and will be given chances to attack'''
     actions:list[Action]
     weights:list[int]
-    distance:int
+    parry_mod:float = 1.0
     strategy_class:Strategy
+    
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.strategy:Strategy = self.strategy_class(parent = self)
-        self.distance = 30
+        self.distance:int = 30
     def take_turn(self, player, action_class = None):
         if action_class is None:
             action_class = self.strategy.get_action()
         return self.set_action(target = player, action_class = action_class)
-    def get_dmg(self, atk:Attack = None) -> float:
-        print(f'get_dmg enemy : {self.dmg_base}')
-        return self.dmg_base
+    def get_atk_source(self, *args):
+        return self
 
 class Item(Viewable):
     '''Base Class for entities that can be placed in players inventory\n
@@ -252,7 +283,7 @@ class Weapon(Equippable):
     Weapons must have a style. Paradigm is melee by default'''
     attacks:list[Action]
     dmg_base:int
-    dodge_class:Attack = None
+    parry_mod:float
     def __init__(self, **kwargs):
         self.paradigm = 'melee'
         super().__init__(**kwargs)
