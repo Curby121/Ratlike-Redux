@@ -35,12 +35,6 @@ class Entity(Viewable):
         return None
     def take_turn(self):
         raise Exception(f'No turn defined for {self.name}')
-    def set_action(self, action_class, **kwargs):
-        self.action = action_class(
-            source = self,
-            **kwargs
-        )
-        return self.action
     def get_atk_source(self, atk) -> float:
         '''On the player this returns the weapon, on enemies it returns the enemy'''
         raise NotImplementedError
@@ -147,6 +141,7 @@ class Action(Viewable):
 class Attack(Action):
     '''Attacks are an Action that have a target.\n
     All attacks have a damage, stagger, and reach'''
+    tgt:Entity
     reach:int
     acc:int
     parry:int
@@ -154,16 +149,14 @@ class Attack(Action):
     dmg_mod:float
     move:int = 0 # amount it moves forward after resolving
     styles:list[str] = []
-    def __init__(self, source:Entity, target:Damageable, **kwargs):
-        self.tgt:Damageable = target
-        source: Enemy
+    def __init__(self, source:Entity, **kwargs):
         super().__init__(source = source, **kwargs)
-        self.eff_r = self._get_eff_reach()
         self.parry = int(source.get_atk_source(self).parry_mod * self.parry)
         self.parry = max(1, self.parry)
 
     def resolve(self):
         super().resolve()
+        print(f'resolving attack: {self}')
         self.tgt.action.mod_distance(self, change = self.move)
         if self.tgt is not None:
             self.tgt.action.attack_me(atk = self)
@@ -192,7 +185,7 @@ class Attack(Action):
             print(f'err, src {self.src}, tgt: {self.tgt}')
             raise NotImplementedError
         
-    def _get_eff_reach(self) -> int:
+    def get_eff_reach(self) -> int:
         return min(self.reach, self.get_distance())
 
     def get_dmg(self) -> int:
@@ -205,9 +198,11 @@ class Attack(Action):
     def __gt__(self, other):
         if not isinstance(other, Attack):
             raise ValueError
-        if self.eff_r > other.eff_r:
+        my_r = self.get_eff_reach()
+        other_r = other.get_eff_reach()
+        if my_r > other_r:
             return True
-        elif self.eff_r == other.eff_r:
+        elif my_r == other_r:
             if 'quick' in self.styles and 'quick' not in other.styles:
                 return True
         else:
@@ -219,7 +214,7 @@ class Strategy:
         self.parent:Damageable = parent
     def get_action(self) -> Action:
         '''Should always be overwritten by inhereted members'''
-        return random.choice(self.parent.actions)[0]
+        return random.choice(self.parent.actions)[0](source = self.parent)
     
 class Enemy(Damageable):
     '''Base Class for enemies that the player will fight.\n
@@ -234,10 +229,11 @@ class Enemy(Damageable):
         super().__init__(**kwargs)
         self.strategy:Strategy = self.strategy_class(parent = self)
         self.distance:int = 30
-    def take_turn(self, player, action_class = None):
-        if action_class is None:
-            action_class = self.strategy.get_action()
-        return self.set_action(target = player, action_class = action_class)
+    def take_turn(self, player):
+        self.action = self.strategy.get_action()
+        if isinstance(self.action, Attack):
+            self.action.tgt = player
+        return self.action
     def get_atk_source(self, *args):
         return self
 

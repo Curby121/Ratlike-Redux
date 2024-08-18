@@ -8,11 +8,12 @@ class Basic(bc.Strategy):
     '''Very simple strategy that tries to not over exhaust'''
     parent:bc.Enemy
     def get_action(self) -> bc.Action:
+        actns:list[bc.Action]
         actns,w = zip(*self.parent.actions)
         wgts = []
         wgts.extend(w)
         if self.parent.exhaust >= self.parent.max_exh:
-            return actions.Rest
+            return actions.Rest(source = self.parent)
         for i,a in enumerate(actns):
             # percentage of exhaust meter filled after using attack
             x = (a.exh_cost + self.parent.exhaust - self.parent.exh_rec) / self.parent.max_exh
@@ -20,7 +21,7 @@ class Basic(bc.Strategy):
             if wgts[i] < 1:
                 wgts[i] = 1
         #print(f'          Enemy weights:{wgts}')
-        return random.choices(actns, wgts)[0]
+        return random.choices(actns, wgts)[0](source = self.parent)
     
 class Troll(Basic):
     def __init__(self, parent: bc.Damageable) -> None:

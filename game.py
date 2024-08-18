@@ -90,8 +90,6 @@ class Game:
 
         # enemy actions
         for e in room.enemies:
-            if e.exhaust >= e.max_exh:
-                e.take_turn(self.plr, actn.Dodge)
             actions.append(e.take_turn(self.plr))
         actions = sort_actions(self.plr_action, actions)
         print(f'get_actions = {actions}')
@@ -100,10 +98,11 @@ class Game:
     def select_player_action(self, action:bc.Action):
         '''Sets player combat action.'''
         self.plr_action = action(
-            source = self.plr,
-            target = self.room.enemies[0]
+            source = self.plr
         )
         self.plr.action = self.plr_action
+        if isinstance(self.plr_action, bc.Attack):
+            self.plr_action.tgt = self.room.enemies[0]
         self.plr_event.set()
 
     def on_object_action(self, obj:bc.RoomObject, index:int):
