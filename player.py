@@ -7,6 +7,7 @@ class Player(bc.Damageable):
     desc = 'You!'
     dmg_base = 6
     stagger_base = 10
+    move = 2
     def __init__(self):
         plr = {
             'max_hp': 35,
@@ -65,7 +66,7 @@ class Player(bc.Damageable):
                 acts.extend(val.get_actions())
         if len(acts) == 0:
             acts.append(actions.Bite)
-        acts.append(actions.Dodge)
+        acts.append(actions.Jump)
         acts.append(actions.Rest)
         return acts
     

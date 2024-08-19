@@ -28,6 +28,7 @@ class Entity(Viewable):
     exhaust:int
     max_exh:int
     exh_rec:int
+    move:int
     def __init__(self, **kwargs) -> None:
         self.action:Action = None
         super().__init__(**kwargs)
@@ -92,7 +93,7 @@ class Action(Viewable):
                stagger_mod:float = 1.0,
                mod_dist:bool = True,
                dist_max:int = -1,
-               dist_min:int = -1,
+               dist_min:int = 0,
                move:int = 0
                ):
         '''Attack the source of this action. This function can be overridden
@@ -111,30 +112,26 @@ class Action(Viewable):
     def mod_distance(
             self,
             atk,
-            atk_mod:bool = True, # stops the atk.reach from modifying the distance
             change:int = 0,
             dist_min:int = 0,
             dist_max:int = -1
             ):
+        print(f'mod-dist: {self.name}, {atk.name} change: {change}, min: {dist_min}, max:{dist_max}')
         if self is atk:
             raise Exception('mod_distance called with atk as self')
         if isinstance(self.src, Enemy):
             enemy = self.src
         elif isinstance(atk.src, Enemy):
             enemy = atk.src
-        try:
-            enemy.distance += change
-            dist = enemy.distance
-            if atk_mod:
-                dist = min(enemy.distance, atk.reach)
-        except Exception as e:
-            print(f'Atks: atk:{atk}, tgt:{self}')
-            print(f'Sources: atk:{atk.src}, tgt:{self.src}')
-            raise e
+            
+        enemy.distance += change
+        dist = enemy.distance
+            
         dist = max(dist, dist_min)
-        if dist_max != -1:
+        if dist_max > -1:
             dist = min(dist, dist_max)
         enemy.distance = dist
+        print(f'enemy.distance = {enemy.distance}')
 
 # TODO: Damage calculation based on weapon / skills etc
 # TODO: tie weapon to attack (as source)
@@ -155,11 +152,14 @@ class Attack(Action):
         self.parry = max(1, self.parry)
 
     def resolve(self):
+        print(f'resolve dists: {self.reach} < {self.get_distance() - self.src.move}')
+        if self.reach < self.get_distance() - self.src.move: # cant move to in range
+            self.mod_distance(self.tgt.action, change = -1 * self.src.move)
+            return GUI.log(f'{self.src.name}\'s {self.name} couldn\'t reach!')
         super().resolve()
         print(f'resolving attack: {self}')
-        self.tgt.action.mod_distance(self, change = self.move)
-        if self.tgt is not None:
-            self.tgt.action.attack_me(atk = self)
+        self.tgt.action.mod_distance(self, dist_max = self.reach)
+        self.tgt.action.attack_me(atk = self)
 
     def attack_me(self, atk):
         def_roll = random.randint(1, self.parry)
@@ -258,10 +258,10 @@ class CounterAttack(Action):
     def react(self, target:Damageable = None):
         '''Perform the saved action'''
         if self.reaction_class is not None:
-            return self.reaction_class(
-                target = target,
-                source = self.src
-                ).resolve()
+            rxn = self.reaction_class(source = self.src)
+            if isinstance(rxn, Attack):
+                rxn.tgt = target
+            rxn.resolve()
 
 class Equippable(Item):
     '''Anything that can be worn or held'''

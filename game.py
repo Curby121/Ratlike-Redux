@@ -49,7 +49,14 @@ class Game:
         while len(room.enemies) > 0:
             # get action list
             actions = await self.get_turn_actions(room)
-            
+            longest_reach = 0
+            for a in actions:
+                if a.reach > longest_reach:
+                    longest_reach = a.reach
+
+            # ew
+            actions[0].mod_distance(actions[1], dist_max = longest_reach)
+                
             # Action resolution
             for a in actions:
                 # TODO: comprehensive death checks

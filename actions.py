@@ -8,7 +8,7 @@ class Rest(bc.Action):
     desc = 'Pause and recover your balance'
     use_msg = 'recovers their balance.'
     def resolve(self):
-        self.src.exhaust -= self.src.exh_rec
+        self.src.exhaust -= self.src.exh_rec * 2
         return super().resolve() # exhaust is taken off once in here too
 
 class Slash(bc.Attack):
@@ -52,9 +52,9 @@ class DaggerStab(bc.Attack):
 
 class Lunge(bc.Attack):
     '''High range high stagger spear attack'''
-    name = 'Poke'
+    name = 'Lunge'
     desc = 'Poke their eyes out, kid!'
-    use_msg = 'poked with their spear!'
+    use_msg = 'lunged with their spear!'
     dmg_mod = 1.5
     parry = 2
     acc = 8
@@ -100,24 +100,24 @@ class RatJump(bc.Attack):
 
 class Dodge(bc.CounterAttack):
     '''Standard Dodge action. Checks for a reaction_class on it\'s source.'''
-    name = 'Dodge'
-    desc = 'Dodge incoming attacks this turn'
-    use_msg = 'jumps back!'
-    reach = 0
+    name = 'Side Step'
+    desc = 'Dodge incoming attacks changing distance'
+    use_msg = 'steps to the side!'
     exh_cost = 15
-    dodge_move = 1
+    dodge_move:int
     def __init__(self, source: bc.Entity, **kwargs):
         super().__init__(source.get_reaction(), source, **kwargs)
         self.used:bool = False
 
     def attack_me(self, atk: bc.Attack):
         self.silent = True
+        atk.mod_distance(self, change = self.dodge_move)
         if not self._can_dodge():
             self.use_msg = 'was too tired to dodge!'
             return self.damage_me(atk)
         if self._dodge_succeeds(atk):
             GUI.log(f'  {atk.tgt.name} dodged the attack!')
-            self.mod_distance(atk, dist_min = atk.reach + 1)
+            self.mod_distance(atk)
             if not self.used and self.reaction_class is not None:
                 self.on_reaction(atk)
         else:
@@ -127,25 +127,10 @@ class Dodge(bc.CounterAttack):
     # TODO: quick/heavy adj.
     def on_reaction(self, atk:bc.Attack):
         '''Called when a reaction occurs'''
-        if 'quick' in atk.styles:
-            pass # no dodge movement on quicks
-        elif 'heavy' in atk.styles or\
-            abs(self.reaction_class.reach - atk.get_distance()) <= self.dodge_move:
-            self.mod_distance(atk,
-                             dist_min= self.reaction_class.reach,
-                             dist_max= self.reaction_class.reach)
-        elif atk.get_distance() > self.reaction_class.reach:
-            self.mod_distance(atk, change = -self.dodge_move, atk_mod = False)
-
-        # TODO: dodge backwards?
-
         GUI.log(f'   and reacts!')
-        if self.reaction_class.reach >= atk.get_distance():
-            self.used = True
-            return self.react(target = atk.src)
-        else:
-            GUI.log(f'Enemy was out of {self.src.name}\'s reaction reach!')
-
+        self.used = True
+        return self.react(target = atk.src)
+    
     def _can_dodge(self) -> bool:
         if self.src.exhaust >= self.src.max_exh:
             GUI.log(f' {self.src.name} is too exhausted to dodge!')
@@ -164,13 +149,27 @@ class Dodge(bc.CounterAttack):
             return False
         else:
             return True
-     
+
+class Jump(Dodge):
+    name = 'Jump Back'
+    desc = 'leap away from your opponent'
+    use_msg = 'jumps back!'
+    exh_cost = 15
+    dodge_move = 2
+
+class DodgeClose(Dodge):
+    name = 'Dodge Forwards'
+    desc = 'Dodge and try to close in'
+    use_msg = 'jumps back!'
+    exh_cost = 15
+    dodge_move = -1
+
 class Block(bc.Action):
     name = 'Block'
     desc = 'Shields Up!'
     def attack_me(self, atk:bc.Attack):
         GUI.log(' The attack is blocked!')
-        dmg_m = 0.35
+        dmg_m = 0
         stgr_m = 0.5
         mod_dist = True
         min_dist = 5

@@ -11,6 +11,7 @@ class Rat(bc.Enemy):
     exh_rec = 8
     dmg_base = 8
     stagger_base = 4
+    move = 3
     strategy_class = st.Basic
     actions = [
         (actions.Bite, 3),
@@ -28,6 +29,7 @@ class Goblin(bc.Enemy):
     exh_rec = 4
     dmg_base = 4
     stagger_base = 10
+    move = 1
     strategy_class = st.Basic
     actions = [
         (actions.Lunge, 60),
@@ -42,6 +44,7 @@ class Skeleton(bc.Enemy):
     exh_rec = 4
     dmg_base = 6
     stagger_base = 16
+    move = 2
     strategy_class = st.Basic
     actions = [
         (actions.Smash, 60),
@@ -57,6 +60,7 @@ class CaveTroll(bc.Enemy):
     exh_rec = 8
     dmg_base = 25
     stagger_base = 26
+    move = 1
     strategy = st.Troll
     actions = [
         (actions.Bite, 40),
