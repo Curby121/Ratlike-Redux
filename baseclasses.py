@@ -44,6 +44,8 @@ class Entity(Viewable):
         return self.exhaust > self.max_exh * threshold
     def get_reaction(self):
         return None
+    def get_parry_class(self):
+        return NotImplementedError
     def can_use_action(self, actn_class) -> True:
         '''Returns True if entity can currently use that action'''
         if self.getset_distance() < actn_class.min_dist:
@@ -86,7 +88,7 @@ class Damageable(Entity):
         self.hp -= dmg
         self.exhaust += stgr
         if dmg == 0:
-            GUI.log(f'  {stgr} stagger!')
+            GUI.log(f'  {self.name} lost {stgr} balance!')
         else:
             GUI.log(f'  {self.name} took {dmg} dmg, {stgr} stgr!')
 
@@ -116,8 +118,6 @@ class Action(Viewable):
             self.mod_distance(change = self.pre_move)
     def resolve(self) -> bool: # false it needs to cancel
         '''Perform this action'''
-        if not self.src.can_use_action(self):
-            return False
         self.src.exhaust += self.exh_cost
         if self.use_msg is not None and not self.silent:
             GUI.log(f'{self.src.name} {self.use_msg}')
@@ -138,6 +138,7 @@ class Action(Viewable):
             raise ValueError
         dmg = int(atk.get_dmg() * dmg_mod)
         stagger = int(atk.get_stagger() * stagger_mod)
+        print(f'damage_me stgr: {stagger} = {atk.get_stagger()} * {stagger_mod}')
         self.src._take_damage(dmg, stagger)
         self.eff *= 1 -(dmg / self.src.max_hp)
         self.eff *= 1 -(stagger / self.src.max_exh)
@@ -169,6 +170,7 @@ class Attack(Action):
     reach:int
     acc:int
     parry:int
+    parry_push:bool = 0 # on a successful parry push the parried attack back this much (to reach)
     stagger_mod:float
     dmg_mod:float
     move:int = 0
@@ -181,23 +183,15 @@ class Attack(Action):
 
     # TODO: cleanup
     def resolve(self, reaction:bool = False) -> bool:
-        oor = False
-        if self.reach < self.get_distance() - self.src.move: # if cant move to in range THIS move
-            plrl = ''
-            if self.src.move > 1: plrl = 's'
-            GUI.log(f'{self.src.name} moved {self.src.move} step{plrl} closer.')
-            self.mod_distance(change = -1 * self.src.move)
-            oor = True
-
-        if reaction and\
-            self.reach < self.get_distance(): # no moves on reaction
-            oor = True
-
         resolves = True
-        if oor:
+        if self.reach < self.get_distance() - self.src.move: # out of range
             GUI.log(f'{self.src.name}\'s {self.name} couldn\'t reach!')
             resolves = False
-            self.silent = True
+            # CAN YOU MOVE ON A ATTACK NOT IN RANGE?
+            if not reaction:
+                pass
+                #GUI.log(f'{self.src.name} moved {self.src.move} step closer.')
+                #self.mod_distance(change = -1 * self.src.move)
             return False
 
         if not super().resolve():
@@ -206,8 +200,9 @@ class Attack(Action):
         if not resolves:
             return False
 
+        # if i CAN move into atk range this turn
         self.mod_distance(dist_max = self.reach)
-        if self.move != 0:
+        if self.move != 0 and not reaction: # no moves on reaction unless it puts u in range
             self.mod_distance(change = self.move)
         self.tgt.action.attack_me(atk = self)
         return True
@@ -216,20 +211,37 @@ class Attack(Action):
     def attack_me(self, atk):
         p_mod = 1.0
         if self.src.off_balance():
-            p_mod = 0.5
+            p_mod = 0.75
         def_roll = random.randint(1, int(self.parry * p_mod) + 1)
         off_roll = random.randint(1, int(atk.acc * atk.eff) + 1)
         print(f'stgr mod off/def: {off_roll} / {def_roll}')
         if def_roll >= off_roll / 2:
-            GUI.log(' The attack is parried.')
+            if def_roll > off_roll:
+                GUI.log(' The attack is parried!')
+                stgr_mod = 0.75
+            else:
+                GUI.log(' The attack is blocked.')
+                stgr_mod = 1
+                
+            # parry pushing
+            if self.reach > self.get_distance() and self.parry_push != 0:
+                GUI.log(f'  {self.name} pushed back {atk.src.name}!')
+                self.mod_distance(change = self.parry_push, dist_max = self.reach)
+
             return self.damage_me(
                 atk,
                 dmg_mod = 0,
-                stagger_mod = min(1.0, off_roll / def_roll)
+                stagger_mod = stgr_mod
                 )
         else:
             GUI.log(' The attack slips though!')
         return self.damage_me(atk)
+
+    def in_range(self, bonus:int = 0):
+        if self.reach + bonus >= self.src.getset_distance():
+            return True
+        else:
+            return False
 
     def get_distance(self) -> int:
         return self.src.getset_distance()
@@ -242,6 +254,7 @@ class Attack(Action):
         return self.src.get_atk_source(self).dmg_base * self.dmg_mod * self.eff
     # stagger not effected by eff ?
     def get_stagger(self) -> int:
+        print(f'attack stgr: {self.src.stagger_base} * {self.stagger_mod}')
         return self.src.stagger_base * self.stagger_mod
     
     def __gt__(self, other):
@@ -273,6 +286,7 @@ class Enemy(Damageable):
     weights:list[int]
     parry_mod:float = 1.0
     strategy_class:Strategy
+    parry_class:Attack
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -283,6 +297,8 @@ class Enemy(Damageable):
         if isinstance(self.action, Attack):
             self.action.tgt = player
         return self.action
+    def get_parry_class(self):
+        return self.parry_class
     def get_atk_source(self, *args):
         return self
     def getset_distance(self, set = None) -> int:
@@ -333,6 +349,7 @@ class Weapon(Equippable):
     attacks:list[Action]
     dmg_base:int
     parry_mod:float = 1.0
+    parry_class:Attack
     dodge_class:Attack = None
     def __init__(self, **kwargs):
         self.paradigm = 'melee'

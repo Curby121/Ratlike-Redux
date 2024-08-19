@@ -8,22 +8,31 @@ class Pause(bc.Action):
     desc = 'Pause and recover your balance'
     use_msg = 'recovers their balance.'
     balance_max = -1
-    def resolve(self):
-        self.src.exhaust -= self.src.exh_rec
-        return super().resolve()
 
 class Slash(bc.Attack):
     '''Default attack for bladed weapons
-    Med range, low damage, med stagger'''
+    good defensive, but needs to win parry fights to build advantage'''
     name = 'Slash'
-    desc = 'The simplest of blade techniques'
+    desc = '''The simplest of blade techniques, its stance allows the user to keep their guard up against incoming attacks.'''
     use_msg = 'slashes.'
     dmg_mod = 1.0
-    stagger_mod = 1.0
+    stagger_mod = 0.75
     parry = 5
+    parry_push = 1
     acc = 3
     reach = 5
-    exh_cost = 10
+    exh_cost = 4
+
+class Chop(bc.Attack):
+    name = 'Chop'
+    desc = '''A harder swing applies more force, but leaves its user more vulnerable'''
+    use_msg = 'chops!'
+    dmg_mod = 1.2
+    stagger_mod = 1.0
+    parry = 2
+    acc = 4
+    reach = 6
+    exh_cost = 6
 
 class Stab(bc.Attack):
     '''Default attack for daggers and knives
@@ -34,9 +43,9 @@ class Stab(bc.Attack):
     dmg_mod = 0.75
     parry = 2
     acc = 7
-    stagger_mod = 0.4
+    stagger_mod = 0.75
     reach = 3
-    exh_cost = 7
+    exh_cost = 3
     styles = ['quick']
 
 class DaggerStab(bc.Attack):
@@ -49,7 +58,7 @@ class DaggerStab(bc.Attack):
     acc = 3
     stagger_mod = 0.1
     reach = 3
-    exh_cost = 12
+    exh_cost = 6
 
 class Lunge(bc.Attack):
     '''High range high acc. Spear signature attack'''
@@ -61,8 +70,8 @@ class Lunge(bc.Attack):
     acc = 8
     stagger_mod = 1.2
     reach = 10
-    exh_cost = 12
-    move = -1
+    exh_cost = 7
+    move = -2
     min_dist = 4
     
 class Smash(bc.Attack):
@@ -75,7 +84,7 @@ class Smash(bc.Attack):
     acc = 10
     stagger_mod = 1.5
     reach = 7
-    exh_cost = 17
+    exh_cost = 8
     styles = ['heavy']
 
 class Bite(bc.Attack):
@@ -99,7 +108,7 @@ class RatJump(bc.Attack):
     stagger_mod = 2.0
     reach = 4
     move = -1
-    exh_cost = 18
+    exh_cost = 12
 
 class Dodge(bc.CounterAttack):
     '''Standard Dodge action. Checks for a reaction_class on it\'s source.'''
@@ -108,6 +117,7 @@ class Dodge(bc.CounterAttack):
     use_msg = 'dodged!'
     exh_cost = 5
     balance_max = 1
+    dodge_cost = 5
     def __init__(self, source: bc.Entity, **kwargs):
         super().__init__(source.get_reaction(), source, **kwargs)
         self.used:bool = False
@@ -117,6 +127,8 @@ class Dodge(bc.CounterAttack):
         if not self._can_dodge():
             self.use_msg = 'was too tired to dodge!'
             return self.damage_me(atk)
+        # inherent cost to dodge
+        self.src.exhaust += self.dodge_cost
         if self._dodge_succeeds(atk):
             GUI.log(f'  {atk.tgt.name} dodged the attack!')
             self.mod_distance()
@@ -124,7 +136,8 @@ class Dodge(bc.CounterAttack):
                 self.on_reaction(atk)
         else:
             GUI.log(f'  {atk.tgt.name} failed to dodge!')
-            return self.damage_me(atk)
+            parry:bc.Attack = self.src.get_parry_class()(source = self.src)
+            return parry.attack_me(atk)
 
     # TODO: quick/heavy adj.
     def on_reaction(self, atk:bc.Attack):
@@ -155,21 +168,21 @@ class Jump(Dodge):
     name = 'Jump Back'
     desc = 'leap away from your opponent'
     use_msg = 'jumps back!'
-    exh_cost = 8
+    exh_cost = 6
     pre_move = 3
 
 class StepBack(Dodge):
     name = 'Step Back'
     desc = 'Give your opponent some space'
-    use_msg = 'takes a step back...'
+    use_msg = 'takes a step back.'
     exh_cost = 2
-    pre_move = -1
+    pre_move = 1
     min_dist = 1
 
 class SideStep(Dodge):
-    name = 'Side Step'
+    name = 'Step In'
     desc = 'Dodge and try to close in'
-    use_msg = 'steps to the side...'
+    use_msg = 'takes a step forwards...'
     exh_cost = 0
     pre_move = -1
     min_dist = 4

@@ -39,7 +39,7 @@ class Basic(bc.Strategy):
             wgts[i] = int(wgts[i] * (1 - x**2))
 
             # hacky
-            if iamsafe and not isinstance(a, bc.Attack):
+            if iamsafe and isinstance(a, actions.Dodge):
                 wgts[i] = 0
 
             # prevents backing up when no atks in range

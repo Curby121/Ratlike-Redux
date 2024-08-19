@@ -5,19 +5,19 @@ class Player(bc.Damageable):
     name = 'Player'
     desc = 'You!'
     dmg_base = 6
-    stagger_base = 10
-    move = 2
+    stagger_base = 7
+    move = 1
     current_enemy:bc.Enemy = None # sucks. for finding distance mainly
     def __init__(self):
         plr = {
             'max_hp': 35,
-            'max_exh': 50,
+            'max_exh': 40,
             'exh_rec': 5
         }
         super().__init__(**plr)
         self.coins = 0
         self.inv = []
-        self.equipment:dict[str, bc.Weapon] = {
+        self.equipment:dict[str, bc.Equippable] = {
             'Primary': None,
             'Secondary': None
         }
@@ -51,14 +51,20 @@ class Player(bc.Damageable):
             action_class = actions.Pause
         print(f'Chose: {action_class.name}')
         return super().take_turn(action_class, target = enemies[0])
-    
+
+    def get_first_from_eqps(self, predicate) -> bc.Equippable:
+        for slot, eq in self.equipment.items():
+            if eq is not None:
+                if predicate(eq) is not None:
+                    return predicate(eq)
+        return None
+
     def get_reaction(self) -> bc.CounterAttack:
-        if self.equipment['Primary'].dodge_class is not None:
-            return self.equipment['Primary'].dodge_class
-        elif self.equipment['Secondary'] is not None:
-            if self.equipment['Secondary'].dodge_class is not None:
-                return self.equipment['Secondary'].dodge_class
+        return self.get_first_from_eqps(lambda x: x.dodge_class)
         
+    def get_parry_class(self) -> bc.Attack:
+        return self.get_first_from_eqps(lambda x: x.parry_class)
+
     def get_combat_actions(self) -> list[bc.Action]:
         acts = []
         for key, val in self.equipment.items():

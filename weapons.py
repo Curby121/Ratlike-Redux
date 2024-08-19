@@ -12,6 +12,7 @@ class Dagger(bc.Weapon):
         actions.Stab,
         actions.DaggerStab
     ]
+    parry_class = actions.Stab
     dodge_class = actions.Stab
 
 class Sword(bc.Weapon):
@@ -22,8 +23,9 @@ class Sword(bc.Weapon):
     dmg_base = 8
     attacks = [
         actions.Slash,
-        actions.Stab
+        actions.Chop
     ]
+    parry_class = actions.Slash
 
 class Spear(bc.Weapon):
     name = 'Wooden Spear'
@@ -37,7 +39,7 @@ class Spear(bc.Weapon):
         actions.Lunge,
         actions.Stab
     ]
-    dodge_class = actions.Stab
+    parry_class = actions.Stab
 
 class WoodenShield(bc.Weapon):
     name = 'Wooden Shield'
