@@ -10,9 +10,13 @@ import player
 import weapons
 import GUI
 
+plr = None # i dont like
+
 class Game:
     def __init__(self):
         self.plr = player.Player()
+        global plr
+        plr = self.plr
         self.plr_action:bc.Action = None
         self.room = None
 
@@ -20,7 +24,9 @@ class Game:
         self.plr_event = asyncio.Event()
 
         #testing
-        weapons.Dagger().equip(self.plr)
+        #weapons.Dagger().equip(self.plr)
+
+        weapons.Sword().equip(self.plr)
         #weapons.Spear().equip(self.plr)
         #weapons.WoodenShield().equip(self.plr)
 
@@ -44,10 +50,15 @@ class Game:
             GUI.EnterRoom(self.room)
 
     async def StartCombat(self, room:bc.Room):
-        GUI.EnterRoom(room)
+        cmbtwindow = GUI.EnterCombatRoom(room)
         self.plr.exhaust = 0
         self.plr.current_enemy = room.enemies[0]
+
         while len(room.enemies) > 0:
+            # update gui
+            p_acts = self.plr.get_combat_actions()
+            cmbtwindow.make_plr_actions(p_acts, self.plr.get_availables(p_acts))
+
             # get action list
             actions = await self.get_turn_actions(room)
             longest_reach = 0
@@ -55,12 +66,9 @@ class Game:
                 if a.reach > longest_reach:
                     longest_reach = a.reach
 
-            actions[0].mod_distance(dist_max = longest_reach)
-                
+            # pre turns are some move actions
             for a in actions:
                 a.pre_turn()
-
-
 
             # Action resolution
             for a in actions:

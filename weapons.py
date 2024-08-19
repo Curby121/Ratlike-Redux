@@ -6,13 +6,24 @@ class Dagger(bc.Weapon):
     desc = 'Stick em with the pointy end!'
     slot = 'Primary'
     value = 5
-    dmg_base = 8
+    dmg_base = 10
     parry_mod = 0.2
     attacks = [
         actions.Stab,
         actions.DaggerStab
     ]
     dodge_class = actions.Stab
+
+class Sword(bc.Weapon):
+    name = 'Iron Sword'
+    desc = 'Swordsman\'s best friend.'
+    slot = 'Primary'
+    value = 15
+    dmg_base = 8
+    attacks = [
+        actions.Slash,
+        actions.Stab
+    ]
 
 class Spear(bc.Weapon):
     name = 'Wooden Spear'

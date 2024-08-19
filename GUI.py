@@ -174,10 +174,8 @@ class RoomWindow(BaseWindow):
 
 # TODO: currently only first enemy is displayed
 class CombatWindow(BaseWindow):
-    def __init__(self, plr_actions, enemies:list):
+    def __init__(self, enemies:list):
         super().__init__()
-        actn_bar = self.ActionBar(self, plr_actions)
-        actn_bar.place(relx=0.5, rely=0.75, anchor='center')
         self.plr_stats = self.PlrStats(self)
         self.plr_stats.place(rely=0.6, relx=0.5, anchor='center', width = 260, height=70)
         self.enemy_stats = self.EnemyStats(self, enemies[0])
@@ -187,6 +185,11 @@ class CombatWindow(BaseWindow):
         self.dist_L.place(relx=0.5, rely=0.38, anchor='center')
 
         self.Updt()
+
+    def make_plr_actions(self, plr_actions, available:list[bool]):
+        assert len(plr_actions) > 0
+        self.actn_bar = self.ActionBar(self, plr_actions, available)
+        self.actn_bar.place(relx=0.5, rely=0.75, anchor='center')
 
     def Updt(self):
         self.plr_stats.update()
@@ -230,15 +233,15 @@ class CombatWindow(BaseWindow):
             log(self.enemy.desc)
 
     class ActionBar(ObjectBar):
-        def __init__(self, root, actions:list):
+        def __init__(self, root, actions:list, available:list[bool]):
             super().__init__(root)
             actns = []
-            for a in actions:
-                actns.append(self.PlayerAction(self, a))
+            for i,a in enumerate(actions):
+                actns.append(self.PlayerAction(self, a, available[i]))
             self.set_frames(actns)
 
         class PlayerAction(ttk.Frame):
-            def __init__(self, root, action):
+            def __init__(self, root, action, active:bool):
                 super().__init__(root)
                 self.action = action
                 self.rowconfigure(0, weight=4)
@@ -255,6 +258,8 @@ class CombatWindow(BaseWindow):
                     )
                 actn_b.grid(row = 0, ipady = 20)
                 info_b.grid(row = 1)
+                if not active:
+                    actn_b.config(state = tk.DISABLED)
             
             def choose_action(self):
                 global game
@@ -294,11 +299,23 @@ async def run():
 
 def EnterRoom(room):
     global current_frame
-    global game
     if current_frame is not None:
         current_frame.destroy()
     if len(room.enemies) != 0:
-        current_frame = CombatWindow(game.plr.get_combat_actions(), room.enemies)
+        raise Exception('Use EnterCombatRoom() for enemies')
     else:
         current_frame = RoomWindow(room)
     current_frame.place(relwidth=1.0, relheight=1.0)
+
+def EnterCombatRoom(room) -> CombatWindow:
+    global current_frame
+    if current_frame is not None:
+        current_frame.destroy()
+    current_frame = CombatWindow(room.enemies)
+    current_frame.place(relwidth=1.0, relheight=1.0)
+    return current_frame
+
+
+def updt_plr_combat(acts, activated:list[bool]):
+    assert isinstance(current_frame, CombatWindow)
+    current_frame.ActionBar

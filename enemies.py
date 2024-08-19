@@ -27,14 +27,15 @@ class Goblin(bc.Enemy):
     max_hp = 22
     max_exh = 40
     exh_rec = 4
-    dmg_base = 4
+    dmg_base = 5
     stagger_base = 10
-    move = 1
+    move = 2
     strategy_class = st.Basic
     actions = [
         (actions.Lunge, 60),
         (actions.Stab, 30),
-        (actions.Jump, 10)
+        (actions.Jump, 10),
+        (actions.SideStep, 20)
     ]
     
 class Skeleton(bc.Enemy):

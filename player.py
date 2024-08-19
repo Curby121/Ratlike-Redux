@@ -59,7 +59,7 @@ class Player(bc.Damageable):
             if self.equipment['Secondary'].dodge_class is not None:
                 return self.equipment['Secondary'].dodge_class
         
-    def get_combat_actions(self) -> list[bc.Attack]:
+    def get_combat_actions(self) -> list[bc.Action]:
         acts = []
         for key, val in self.equipment.items():
             if val is not None:
@@ -67,10 +67,20 @@ class Player(bc.Damageable):
         if len(acts) == 0:
             acts.append(actions.Bite)
         acts.append(actions.SideStep)
+        acts.append(actions.StepBack)
         acts.append(actions.Jump)
         acts.append(actions.Pause)
         return acts
-    
+
+    def get_availables(self, actns:list[bc.Action]) -> list[bool]:
+        res = []
+        for a in actns:
+            if self.can_use_action(a):
+                res.append(True)
+            else:
+                res.append(False)
+        return res
+
     def get_weapon_with_attack(self, atk:bc.Attack) -> bc.Weapon:
         for key, wep in self.equipment.items():
             if wep is not None:

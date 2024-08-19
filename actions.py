@@ -18,7 +18,7 @@ class Slash(bc.Attack):
     name = 'Slash'
     desc = 'The simplest of blade techniques'
     use_msg = 'slashes.'
-    dmg_mod = 0.8
+    dmg_mod = 1.0
     stagger_mod = 1.0
     parry = 5
     acc = 3
@@ -31,10 +31,10 @@ class Stab(bc.Attack):
     name = 'Stab'
     desc = 'A hard stab'
     use_msg = 'stabs quickly.'
-    dmg_mod = 1.0
-    parry = 3
+    dmg_mod = 0.75
+    parry = 2
     acc = 7
-    stagger_mod = 0.5
+    stagger_mod = 0.4
     reach = 3
     exh_cost = 7
     styles = ['quick']
@@ -52,7 +52,7 @@ class DaggerStab(bc.Attack):
     exh_cost = 12
 
 class Lunge(bc.Attack):
-    '''High range high stagger spear attack'''
+    '''High range high acc. Spear signature attack'''
     name = 'Lunge'
     desc = 'Poke their eyes out, kid!'
     use_msg = 'lunged with their spear!'
@@ -61,7 +61,7 @@ class Lunge(bc.Attack):
     acc = 8
     stagger_mod = 1.2
     reach = 10
-    exh_cost = 17
+    exh_cost = 12
     move = -1
     min_dist = 4
     
@@ -105,8 +105,8 @@ class Dodge(bc.CounterAttack):
     '''Standard Dodge action. Checks for a reaction_class on it\'s source.'''
     name = 'Dodge'
     desc = 'Dodge incoming attacks without changing distance'
-    use_msg = 'steps to the side!'
-    exh_cost = 15
+    use_msg = 'dodged!'
+    exh_cost = 5
     balance_max = 1
     def __init__(self, source: bc.Entity, **kwargs):
         super().__init__(source.get_reaction(), source, **kwargs)
@@ -155,14 +155,22 @@ class Jump(Dodge):
     name = 'Jump Back'
     desc = 'leap away from your opponent'
     use_msg = 'jumps back!'
-    exh_cost = 15
-    pre_move = 2
+    exh_cost = 8
+    pre_move = 3
+
+class StepBack(Dodge):
+    name = 'Step Back'
+    desc = 'Give your opponent some space'
+    use_msg = 'takes a step back...'
+    exh_cost = 2
+    pre_move = -1
+    min_dist = 1
 
 class SideStep(Dodge):
     name = 'Side Step'
     desc = 'Dodge and try to close in'
     use_msg = 'steps to the side...'
-    exh_cost = 12
+    exh_cost = 0
     pre_move = -1
     min_dist = 4
 

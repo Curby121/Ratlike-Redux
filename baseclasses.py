@@ -40,10 +40,28 @@ class Entity(Viewable):
         if threshold is None:
             threshold = 0.5
         if threshold < 0:
-            return True
+            return False
         return self.exhaust > self.max_exh * threshold
     def get_reaction(self):
         return None
+    def can_use_action(self, actn_class) -> True:
+        '''Returns True if entity can currently use that action'''
+        if self.getset_distance() < actn_class.min_dist:
+            #print(f'{self.name}:{actn_class.name} under min dist')
+            return False
+        if self.off_balance(actn_class.balance_max):
+            #print(f'{self.name}:{actn_class.name} off balance')
+            return False
+        return True
+    def in_range(self, actn) -> bool:
+        '''Returns true if an attack will land, False otherwise\n
+        non attacks will always return true'''
+        if isinstance(actn, Attack):
+            if self.getset_distance() > actn.reach - actn.pre_move:
+                print(f'{actn.name} out of range')
+                return False
+        else:
+            return True
     def take_turn(self):
         raise Exception(f'No turn defined for {self.name}')
     def get_atk_source(self, atk) -> float:
@@ -98,9 +116,7 @@ class Action(Viewable):
             self.mod_distance(change = self.pre_move)
     def resolve(self) -> bool: # false it needs to cancel
         '''Perform this action'''
-        if self.src.exhaust > self.src.max_exh * self.balance_max and\
-            self.balance_max != -1: # -1 means no max
-            GUI.log(f'  {self.src.name} is off balance!')
+        if not self.src.can_use_action(self):
             return False
         self.src.exhaust += self.exh_cost
         if self.use_msg is not None and not self.silent:
@@ -166,8 +182,10 @@ class Attack(Action):
     # TODO: cleanup
     def resolve(self, reaction:bool = False) -> bool:
         oor = False
-
         if self.reach < self.get_distance() - self.src.move: # if cant move to in range THIS move
+            plrl = ''
+            if self.src.move > 1: plrl = 's'
+            GUI.log(f'{self.src.name} moved {self.src.move} step{plrl} closer.')
             self.mod_distance(change = -1 * self.src.move)
             oor = True
 
@@ -180,6 +198,7 @@ class Attack(Action):
             GUI.log(f'{self.src.name}\'s {self.name} couldn\'t reach!')
             resolves = False
             self.silent = True
+            return False
 
         if not super().resolve():
             return False
@@ -187,9 +206,9 @@ class Attack(Action):
         if not resolves:
             return False
 
-        self.tgt.action.mod_distance(dist_max = self.reach)
+        self.mod_distance(dist_max = self.reach)
         if self.move != 0:
-            self.tgt.action.mod_distance(change = self.move)
+            self.mod_distance(change = self.move)
         self.tgt.action.attack_me(atk = self)
         return True
 
@@ -258,7 +277,7 @@ class Enemy(Damageable):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.strategy:Strategy = self.strategy_class(parent = self)
-        self.distance:int = 30
+        self.distance:int = 13
     def take_turn(self, player):
         self.action = self.strategy.get_action()
         if isinstance(self.action, Attack):
@@ -313,7 +332,8 @@ class Weapon(Equippable):
     Weapons must have a style. Paradigm is melee by default'''
     attacks:list[Action]
     dmg_base:int
-    parry_mod:float
+    parry_mod:float = 1.0
+    dodge_class:Attack = None
     def __init__(self, **kwargs):
         self.paradigm = 'melee'
         super().__init__(**kwargs)
