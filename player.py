@@ -1,5 +1,4 @@
 import baseclasses as bc
-import weapons
 import actions
 
 class Player(bc.Damageable):
@@ -8,6 +7,7 @@ class Player(bc.Damageable):
     dmg_base = 6
     stagger_base = 10
     move = 2
+    current_enemy:bc.Enemy = None # sucks. for finding distance mainly
     def __init__(self):
         plr = {
             'max_hp': 35,
@@ -48,7 +48,7 @@ class Player(bc.Damageable):
                 print(f'[Err] {e}')
 
         if self.exhaust >= self.max_exh:
-            action_class = actions.Rest
+            action_class = actions.Pause
         print(f'Chose: {action_class.name}')
         return super().take_turn(action_class, target = enemies[0])
     
@@ -66,8 +66,9 @@ class Player(bc.Damageable):
                 acts.extend(val.get_actions())
         if len(acts) == 0:
             acts.append(actions.Bite)
+        acts.append(actions.SideStep)
         acts.append(actions.Jump)
-        acts.append(actions.Rest)
+        acts.append(actions.Pause)
         return acts
     
     def get_weapon_with_attack(self, atk:bc.Attack) -> bc.Weapon:
@@ -79,7 +80,8 @@ class Player(bc.Damageable):
                 if isinstance(atk, wep.dodge_class):
                     return wep
         else:
-            raise Exception('Atk not found in eqp')
+            print('Atk not found in eqp')
+            return atk
 
     def get_dmg(self, atk:bc.Attack) -> float:
         # TODO: modifiers
@@ -93,5 +95,8 @@ class Player(bc.Damageable):
         else:
             raise Exception('Atk not found in eqp')
         
+    def getset_distance(self, set = None) -> int:
+        return self.current_enemy.getset_distance(set)
+
     def get_atk_source(self, atk) -> float:
         return self.get_weapon_with_attack(atk)

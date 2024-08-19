@@ -25,7 +25,7 @@ class Goblin(bc.Enemy):
     name = 'Goblin'
     desc = 'A stinky goblin! Look out for it\'s pointy spear!'
     max_hp = 22
-    max_exh = 45
+    max_exh = 40
     exh_rec = 4
     dmg_base = 4
     stagger_base = 10
@@ -33,7 +33,8 @@ class Goblin(bc.Enemy):
     strategy_class = st.Basic
     actions = [
         (actions.Lunge, 60),
-        (actions.Stab, 30)
+        (actions.Stab, 30),
+        (actions.Jump, 10)
     ]
     
 class Skeleton(bc.Enemy):

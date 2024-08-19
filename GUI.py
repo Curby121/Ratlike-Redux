@@ -262,12 +262,15 @@ class CombatWindow(BaseWindow):
             def examine_action(self):
                 log('')
                 log(f'{self.action.name}: \n{self.action.desc}')
-                log(f'  Exhaustion Cost: {self.action.exh_cost}')
+                if hasattr(self.action, 'acc'):
+                    log(f'  Accuracy: {self.action.acc}')
+                    log(f'  Parry: {self.action.parry}')
                 if hasattr(self.action, 'reach'):
                     log(f'  Reach: {self.action.reach}')
                 if hasattr(self.action, 'dmg_mod'):
                     log(f'  Damage: x{self.action.dmg_mod}')
                     log(f'  Stagger: x{self.action.stagger_mod}')
+                log(f'  Balance Cost: {self.action.exh_cost}')
                 if hasattr(self.action, 'styles'):
                     if len(self.action.styles) > 0:
                         for i,s in enumerate(self.action.styles):

@@ -32,6 +32,16 @@ class Entity(Viewable):
     def __init__(self, **kwargs) -> None:
         self.action:Action = None
         super().__init__(**kwargs)
+    def getset_distance(self, set = None) -> int:
+        return NotImplementedError
+    def off_balance(self, threshold:float = None) -> bool:
+        '''Returns true if entity is off balance by the given threshold.\n
+        Negative threshold returns False'''
+        if threshold is None:
+            threshold = 0.5
+        if threshold < 0:
+            return True
+        return self.exhaust > self.max_exh * threshold
     def get_reaction(self):
         return None
     def take_turn(self):
@@ -73,65 +83,66 @@ class Action(Viewable):
     exh_cost:int = 0
     use_msg:str = None
     reach:int = 0
+    balance_max:int = 0.5 # off balance is: exh > max_exh * balance_max
+    min_dist:int = 0 # minimum distance this atk can be used
+    pre_move:int = 0 # pre moves all happen before the turn starts
     def __init__(self, source:Entity, **kwargs):
+        super().__init__(**kwargs)
         self.eff: float = 1.0
         self.silent:bool = False
-        super().__init__(**kwargs)
         self.src:Damageable = source
-    def resolve(self):
+        if self.src.getset_distance() < self.min_dist:
+            raise Exception(f'min distance exception on {self.name}, dist = {self.src.getset_distance()}')
+    def pre_turn(self):
+        if self.pre_move != 0:
+            self.mod_distance(change = self.pre_move)
+    def resolve(self) -> bool: # false it needs to cancel
         '''Perform this action'''
+        if self.src.exhaust > self.src.max_exh * self.balance_max and\
+            self.balance_max != -1: # -1 means no max
+            GUI.log(f'  {self.src.name} is off balance!')
+            return False
         self.src.exhaust += self.exh_cost
         if self.use_msg is not None and not self.silent:
             GUI.log(f'{self.src.name} {self.use_msg}')
+        return True
     
     def attack_me(self, **kwargs):
         self.damage_me(**kwargs)
 
-    #TODO: separate out to other fns, leave this as a not impl
+    #TODO: simplify args
     def damage_me(self, atk,
                dmg_mod:float = 1.0,
                stagger_mod:float = 1.0,
-               mod_dist:bool = True,
-               dist_max:int = -1,
-               dist_min:int = 0,
-               move:int = 0
+               move_in_range:bool = False # force a move to the atks range
                ):
         '''Attack the source of this action. This function can be overridden
         on actions that interrupt incoming attacks'''
+        if not isinstance(atk, Attack):
+            raise ValueError
         dmg = int(atk.get_dmg() * dmg_mod)
         stagger = int(atk.get_stagger() * stagger_mod)
         self.src._take_damage(dmg, stagger)
         self.eff *= 1 -(dmg / self.src.max_hp)
         self.eff *= 1 -(stagger / self.src.max_exh)
-        if mod_dist:
-            self.mod_distance(atk,
-                              change = move,
-                              dist_min = dist_min,
-                              dist_max = dist_max)
+        if move_in_range:
+            self.mod_distance(dist_max = atk.reach)
 
+    # change the distance of this action
+    # TODO: move this to entity and override in enemy and plr
     def mod_distance(
             self,
-            atk,
             change:int = 0,
             dist_min:int = 0,
             dist_max:int = -1
             ):
-        print(f'mod-dist: {self.name}, {atk.name} change: {change}, min: {dist_min}, max:{dist_max}')
-        if self is atk:
-            raise Exception('mod_distance called with atk as self')
-        if isinstance(self.src, Enemy):
-            enemy = self.src
-        elif isinstance(atk.src, Enemy):
-            enemy = atk.src
-            
-        enemy.distance += change
-        dist = enemy.distance
-            
+        dist = self.src.getset_distance()
+        dist += change
         dist = max(dist, dist_min)
         if dist_max > -1:
             dist = min(dist, dist_max)
-        enemy.distance = dist
-        print(f'enemy.distance = {enemy.distance}')
+        print(f'mod_dist(self={self.name}, change={change}, min={dist_min}, max={dist_max}) = {dist}')
+        self.src.getset_distance(set = dist)
 
 # TODO: Damage calculation based on weapon / skills etc
 # TODO: tie weapon to attack (as source)
@@ -144,26 +155,51 @@ class Attack(Action):
     parry:int
     stagger_mod:float
     dmg_mod:float
-    move:int = 0 # amount it moves forward after resolving
+    move:int = 0
     styles:list[str] = []
-    def __init__(self, source:Entity, **kwargs):
-        super().__init__(source = source, **kwargs)
+
+    def __init__(self, source: Entity, **kwargs):
         self.parry = int(source.get_atk_source(self).parry_mod * self.parry)
         self.parry = max(1, self.parry)
+        super().__init__(source, **kwargs)
 
-    def resolve(self):
-        print(f'resolve dists: {self.reach} < {self.get_distance() - self.src.move}')
-        if self.reach < self.get_distance() - self.src.move: # cant move to in range
-            self.mod_distance(self.tgt.action, change = -1 * self.src.move)
-            return GUI.log(f'{self.src.name}\'s {self.name} couldn\'t reach!')
-        super().resolve()
-        print(f'resolving attack: {self}')
-        self.tgt.action.mod_distance(self, dist_max = self.reach)
+    # TODO: cleanup
+    def resolve(self, reaction:bool = False) -> bool:
+        oor = False
+
+        if self.reach < self.get_distance() - self.src.move: # if cant move to in range THIS move
+            self.mod_distance(change = -1 * self.src.move)
+            oor = True
+
+        if reaction and\
+            self.reach < self.get_distance(): # no moves on reaction
+            oor = True
+
+        resolves = True
+        if oor:
+            GUI.log(f'{self.src.name}\'s {self.name} couldn\'t reach!')
+            resolves = False
+            self.silent = True
+
+        if not super().resolve():
+            return False
+
+        if not resolves:
+            return False
+
+        self.tgt.action.mod_distance(dist_max = self.reach)
+        if self.move != 0:
+            self.tgt.action.mod_distance(change = self.move)
         self.tgt.action.attack_me(atk = self)
+        return True
 
+    # parry checks
     def attack_me(self, atk):
-        def_roll = random.randint(1, self.parry)
-        off_roll = random.randint(1, atk.acc)
+        p_mod = 1.0
+        if self.src.off_balance():
+            p_mod = 0.5
+        def_roll = random.randint(1, int(self.parry * p_mod) + 1)
+        off_roll = random.randint(1, int(atk.acc * atk.eff) + 1)
         print(f'stgr mod off/def: {off_roll} / {def_roll}')
         if def_roll >= off_roll / 2:
             GUI.log(' The attack is parried.')
@@ -177,13 +213,7 @@ class Attack(Action):
         return self.damage_me(atk)
 
     def get_distance(self) -> int:
-        if isinstance(self.tgt, Enemy):
-            return self.tgt.distance
-        elif isinstance(self.src, Enemy):
-            return self.src.distance
-        else:
-            print(f'err, src {self.src}, tgt: {self.tgt}')
-            raise NotImplementedError
+        return self.src.getset_distance()
         
     def get_eff_reach(self) -> int:
         return min(self.reach, self.get_distance())
@@ -236,6 +266,10 @@ class Enemy(Damageable):
         return self.action
     def get_atk_source(self, *args):
         return self
+    def getset_distance(self, set = None) -> int:
+        if set is not None:
+            self.distance = set
+        return self.distance
 
 class Item(Viewable):
     '''Base Class for entities that can be placed in players inventory\n
@@ -261,7 +295,7 @@ class CounterAttack(Action):
             rxn = self.reaction_class(source = self.src)
             if isinstance(rxn, Attack):
                 rxn.tgt = target
-            rxn.resolve()
+            rxn.resolve(reaction = True)
 
 class Equippable(Item):
     '''Anything that can be worn or held'''

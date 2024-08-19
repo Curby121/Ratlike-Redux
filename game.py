@@ -46,6 +46,7 @@ class Game:
     async def StartCombat(self, room:bc.Room):
         GUI.EnterRoom(room)
         self.plr.exhaust = 0
+        self.plr.current_enemy = room.enemies[0]
         while len(room.enemies) > 0:
             # get action list
             actions = await self.get_turn_actions(room)
@@ -54,16 +55,20 @@ class Game:
                 if a.reach > longest_reach:
                     longest_reach = a.reach
 
-            # ew
-            actions[0].mod_distance(actions[1], dist_max = longest_reach)
+            actions[0].mod_distance(dist_max = longest_reach)
                 
+            for a in actions:
+                a.pre_turn()
+
+
+
             # Action resolution
             for a in actions:
                 # TODO: comprehensive death checks
                 if a.src.hp <= 0:
                     continue
                 if a.src.exhaust >= a.src.max_exh and\
-                    not isinstance(a, actn.Rest):
+                    not isinstance(a, actn.Pause):
                     GUI.log(f'{a.src.name} stumbles...')
                     continue
                 a.resolve()
@@ -90,8 +95,8 @@ class Game:
         actions = []
         self.plr_event.clear() # ensure entering room set() doesnt stick
         if self.plr.exhaust >= self.plr.max_exh:
-            self.select_player_action(actn.Rest)
-            GUI.log('YOU ARE EXHAUSTED!\n')
+            self.select_player_action(actn.Pause)
+            GUI.log('YOU LOSE YOUR BALANCE!\n')
             await asyncio.sleep(1)
         await self.plr_event.wait() # wait for plr input
 
@@ -99,7 +104,6 @@ class Game:
         for e in room.enemies:
             actions.append(e.take_turn(self.plr))
         actions = sort_actions(self.plr_action, actions)
-        print(f'get_actions = {actions}')
         return actions
 
     def select_player_action(self, action:bc.Action):

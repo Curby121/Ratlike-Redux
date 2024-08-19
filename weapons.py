@@ -9,7 +9,6 @@ class Dagger(bc.Weapon):
     dmg_base = 8
     parry_mod = 0.2
     attacks = [
-        actions.Slash,
         actions.Stab,
         actions.DaggerStab
     ]

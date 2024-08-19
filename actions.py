@@ -3,13 +3,14 @@ import GUI
 import random
 random.seed()
 
-class Rest(bc.Action):
-    name = 'Rest'
+class Pause(bc.Action):
+    name = 'Pause'
     desc = 'Pause and recover your balance'
     use_msg = 'recovers their balance.'
+    balance_max = -1
     def resolve(self):
-        self.src.exhaust -= self.src.exh_rec * 2
-        return super().resolve() # exhaust is taken off once in here too
+        self.src.exhaust -= self.src.exh_rec
+        return super().resolve()
 
 class Slash(bc.Attack):
     '''Default attack for bladed weapons
@@ -61,6 +62,8 @@ class Lunge(bc.Attack):
     stagger_mod = 1.2
     reach = 10
     exh_cost = 17
+    move = -1
+    min_dist = 4
     
 class Smash(bc.Attack):
     '''Med range high stagger'''
@@ -100,24 +103,23 @@ class RatJump(bc.Attack):
 
 class Dodge(bc.CounterAttack):
     '''Standard Dodge action. Checks for a reaction_class on it\'s source.'''
-    name = 'Side Step'
-    desc = 'Dodge incoming attacks changing distance'
+    name = 'Dodge'
+    desc = 'Dodge incoming attacks without changing distance'
     use_msg = 'steps to the side!'
     exh_cost = 15
-    dodge_move:int
+    balance_max = 1
     def __init__(self, source: bc.Entity, **kwargs):
         super().__init__(source.get_reaction(), source, **kwargs)
         self.used:bool = False
 
     def attack_me(self, atk: bc.Attack):
         self.silent = True
-        atk.mod_distance(self, change = self.dodge_move)
         if not self._can_dodge():
             self.use_msg = 'was too tired to dodge!'
             return self.damage_me(atk)
         if self._dodge_succeeds(atk):
             GUI.log(f'  {atk.tgt.name} dodged the attack!')
-            self.mod_distance(atk)
+            self.mod_distance()
             if not self.used and self.reaction_class is not None:
                 self.on_reaction(atk)
         else:
@@ -145,28 +147,29 @@ class Dodge(bc.CounterAttack):
             return False
         if roll >= 4: # 60%
             return True
-        if 'quick' in atk.styles and roll < 4: # quick is harder to dodge
+        if 'quick' in atk.styles: # quick is harder to dodge
             return False
-        else:
-            return True
+        return True
 
 class Jump(Dodge):
     name = 'Jump Back'
     desc = 'leap away from your opponent'
     use_msg = 'jumps back!'
     exh_cost = 15
-    dodge_move = 2
+    pre_move = 2
 
-class DodgeClose(Dodge):
-    name = 'Dodge Forwards'
+class SideStep(Dodge):
+    name = 'Side Step'
     desc = 'Dodge and try to close in'
-    use_msg = 'jumps back!'
-    exh_cost = 15
-    dodge_move = -1
+    use_msg = 'steps to the side...'
+    exh_cost = 12
+    pre_move = -1
+    min_dist = 4
 
 class Block(bc.Action):
     name = 'Block'
     desc = 'Shields Up!'
+    balance_max = 1
     def attack_me(self, atk:bc.Attack):
         GUI.log(' The attack is blocked!')
         dmg_m = 0
@@ -186,7 +189,7 @@ class Block(bc.Action):
         self.damage_me(atk,
                        dmg_mod = dmg_m,
                        stagger_mod = stgr_m,
-                       mod_dist = mod_dist,
+                       move_in_range = mod_dist,
                        dist_min = min_dist
                        )
         atk.src._take_damage(0, int(reflected_stagger))
