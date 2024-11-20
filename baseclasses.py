@@ -34,11 +34,9 @@ class Entity(Viewable):
         super().__init__(**kwargs)
     def getset_distance(self, set = None) -> int:
         return NotImplementedError
-    def off_balance(self, threshold:float = None) -> bool:
+    def off_balance(self, threshold:float = 0.5) -> bool:
         '''Returns true if entity is off balance by the given threshold.\n
         Negative threshold returns False'''
-        if threshold is None:
-            threshold = 0.5
         if threshold < 0:
             return False
         return self.exhaust > self.max_exh * threshold
@@ -58,12 +56,11 @@ class Entity(Viewable):
     def in_range(self, actn) -> bool:
         '''Returns true if an attack will land, False otherwise\n
         non attacks will always return true'''
-        if isinstance(actn, Attack):
+        if issubclass(actn, Attack):
             if self.getset_distance() > actn.reach - actn.pre_move:
-                print(f'{actn.name} out of range')
+                print(f'OOR calc : {self.getset_distance()} > {actn.reach - actn.pre_move}')
                 return False
-        else:
-            return True
+        return True
     def take_turn(self):
         raise Exception(f'No turn defined for {self.name}')
     def get_atk_source(self, atk) -> float:

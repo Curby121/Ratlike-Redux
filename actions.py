@@ -21,7 +21,7 @@ class Slash(bc.Attack):
     parry_push = 1
     acc = 3
     reach = 5
-    exh_cost = 4
+    exh_cost = 7
 
 class Chop(bc.Attack):
     name = 'Chop'
@@ -32,7 +32,7 @@ class Chop(bc.Attack):
     parry = 2
     acc = 4
     reach = 6
-    exh_cost = 6
+    exh_cost = 9
 
 class Stab(bc.Attack):
     '''Default attack for daggers and knives
@@ -45,7 +45,7 @@ class Stab(bc.Attack):
     acc = 7
     stagger_mod = 0.75
     reach = 3
-    exh_cost = 3
+    exh_cost = 6
     styles = ['quick']
 
 class DaggerStab(bc.Attack):
@@ -58,7 +58,7 @@ class DaggerStab(bc.Attack):
     acc = 3
     stagger_mod = 0.1
     reach = 3
-    exh_cost = 6
+    exh_cost = 10
 
 class Lunge(bc.Attack):
     '''High range high acc. Spear signature attack'''

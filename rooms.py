@@ -6,9 +6,9 @@ random.seed()
 
 class LabyrinthRoom(bc.Room):
     encounters = [
-        ([enemies.Rat], 20),
+        ([enemies.Rat], 0),
         ([enemies.Goblin], 3000),
-        ([enemies.Skeleton], 10),
+        ([enemies.Skeleton], 0),
         ([], 40)
     ]
     centerpieces = [

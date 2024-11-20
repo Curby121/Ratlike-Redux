@@ -31,11 +31,11 @@ class Goblin(bc.Enemy):
     stagger_base = 7
     move = 1
     parry_class = actions.Stab
-    strategy_class = st.Basic
+    strategy_class = st.Basic2
     actions = [
         (actions.Lunge, 60),
         (actions.Stab, 30),
-        (actions.Jump, 10),
+        (actions.StepBack, 15),
         (actions.SideStep, 20)
     ]
     
