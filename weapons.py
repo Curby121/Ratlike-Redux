@@ -20,7 +20,7 @@ class Sword(bc.Weapon):
     desc = 'Swordsman\'s best friend.'
     slot = 'Primary'
     value = 15
-    dmg_base = 8
+    dmg_base = 5
     attacks = [
         actions.Slash,
         actions.Chop

@@ -37,21 +37,16 @@ class Entity(Viewable):
         return NotImplementedError
     
     # doesnt do what it says, returns if balance > 0
-    def off_balance(self, threshold:float = 0.5) -> bool:
-        return self.balance <= 0
-        '''Returns true if entity is off balance by the given threshold.\n
-        Negative threshold returns False'''
-        if threshold < 0:
-            return False
-        return self.balance < self.bal_max * threshold
+    def off_balance(self, cost:int = 0) -> bool:
+        '''Returns true if entity cannot spent cost in balance'''
+        return self.balance < cost
     def get_reaction(self):
         return None
     def get_parry_class(self):
         return NotImplementedError
     def can_use_action(self, actn_class) -> True:
         '''Returns True if entity can currently use that action'''
-        if self.off_balance(actn_class.balance_max):
-            #print(f'{self.name}:{actn_class.name} off balance')
+        if self.off_balance(actn_class.bal_use_cost):
             return False
         return True
     def take_turn(self):
@@ -102,6 +97,7 @@ class Damageable(Entity):
     def new_turn(self):
         '''Reset bookkeeping for next turn'''
         self.balance = min(self.bal_max, self.balance + self.bal_rec)
+        self.balance = max(0, self.balance)
 
 # an instance of this class is placed on the table when an action is selected
 class Action(Viewable):
@@ -158,26 +154,24 @@ class Attack(Action):
         return True
 
     # parry checks
-    def attack_me(self, atk):
-        modifier = (atk.src.balance / atk.src.bal_max) / (self.src.balance / self.src.bal_max)
-        if modifier != 0:
-            def_max = self.parry
-            off_max = int(atk.acc * modifier)
-            def_roll = random.randint(1, def_max + 1)
-            off_roll = random.randint(1, off_max + 1)
-            print(f'PARRY CHECK: off/def: {off_roll} / {def_roll} || {off_max+1} / {def_max+1} mod:{modifier}')
-        else: # HACK fix for things attacking with -ve balance
-            def_roll = 3
-            off_roll = 1
+    def attack_me(self, atk:Action):
+        def_mod = self.src.balance / self.src.bal_max
+        off_mod = (atk.src.balance / atk.src.bal_max) / 2
+        def_max = int(self.parry * def_mod)
+        off_max = int(atk.acc * (0.5 + off_mod))
+        if off_max <= 0:
+            print(f'offmax: {off_max} |{atk}')
+        def_roll = random.randint(1, def_max + 1)
+        off_roll = random.randint(1, off_max + 1)
+        print(f'PARRY CHECK: off/def: {off_roll} / {def_roll} || {off_max+1} / {def_max+1}   mods:{off_mod} / {def_mod}')
         if def_roll >= off_roll:
             GUI.log(' The attack is parried!')
+            return
             return self.src.damage_me(
                 atk,
                 dmg_mod = 0,
                 stagger_mod = 0.5
                 )
-        else:
-            GUI.log(' The attack slips though!')
         return self.src.damage_me(atk)
 
     def in_range(self, bonus:int = 0):

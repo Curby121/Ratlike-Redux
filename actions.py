@@ -6,7 +6,6 @@ random.seed()
 class Pause(bc.Action):
     name = 'Pause'
     desc = 'Stall one action'
-    use_msg = 'recovers their balance.'
     timer = 1
     balance_max = -1
 
@@ -16,11 +15,11 @@ class Slash(bc.Attack):
     name = 'Slash'
     desc = '''The simplest of blade techniques, its stance allows the user to keep their guard up against incoming attacks.'''
     use_msg = 'slashes.'
-    dmg_mod = 1.0
-    stagger_mod = 1.0
+    dmg_mod = 0.75
+    stagger_mod = 0.5
     parry = 7
     acc = 3
-    bal_resolve_cost = 2
+    bal_use_cost = 4
     reach = 5
 
 class Chop(bc.Attack):
@@ -29,7 +28,7 @@ class Chop(bc.Attack):
     use_msg = 'chops!'
     timer = 5
     bal_resolve_cost = 4
-    dmg_mod = 1.5
+    dmg_mod = 1.0
     stagger_mod = 1.5
     parry = 2
     acc = 6
@@ -42,10 +41,12 @@ class Stab(bc.Attack):
     desc = 'A hard stab'
     use_msg = 'stabs quickly.'
     timer = 3
-    dmg_mod = 0.75
-    parry = 2
+    bal_use_cost = 2
+    bal_resolve_cost = 1
+    dmg_mod = 1
+    parry = 1
     acc = 4
-    stagger_mod = 0.75
+    stagger_mod = 0.5
     reach = 3
     styles = ['quick']
 
@@ -62,20 +63,18 @@ class DaggerStab(bc.Attack):
     exh_cost = 10
 
 class Lunge(bc.Attack):
-    '''High range high acc. Spear signature attack'''
+    '''Aggressive Thrust. Spear signature attack.'''
     name = 'Lunge'
     desc = 'Poke their eyes out, kid!'
     use_msg = 'lunged with their spear!'
-    dmg_mod = 1.5
+    dmg_mod = 2.0
+    stagger_mod = 1.5
     timer = 5
-    bal_use_cost = 3
-    bal_resolve_cost = 2
+    bal_use_cost = 4
+    bal_resolve_cost = 3
     acc = 8
     parry = 0
     stagger_mod = 1.2
-    reach = 10
-    exh_cost = 7
-    move = -2
     
 class Smash(bc.Attack):
     '''Med range high stagger'''
@@ -109,7 +108,6 @@ class Dodge(bc.CounterAttack):
     use_msg = 'dodged!'
     timer = 3
     bal_use_cost = 2
-    bal_resolve_cost = 1
     def __init__(self, source: bc.Entity, **kwargs):
         super().__init__(source.get_reaction(), source, **kwargs)
         self.used:bool = False
@@ -143,27 +141,6 @@ class Dodge(bc.CounterAttack):
         if 'quick' in atk.styles: # quick is harder to dodge
             return False
         return True
-
-class Jump(Dodge):
-    name = 'Jump Back'
-    desc = 'leap away from your opponent'
-    use_msg = 'jumps back!'
-    exh_cost = 6
-    pre_move = 3
-
-class StepBack(Dodge):
-    name = 'Step Back'
-    desc = 'Give your opponent some space'
-    use_msg = 'takes a step back.'
-    exh_cost = 2
-    pre_move = 1
-
-class SideStep(Dodge):
-    name = 'Step In'
-    desc = 'Dodge and try to close in'
-    use_msg = 'takes a step forwards...'
-    exh_cost = 0
-    pre_move = -1
 
 class Block(bc.Action):
     name = 'Block'

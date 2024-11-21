@@ -10,7 +10,7 @@ import player
 import weapons
 import GUI
 
-plr = None # i dont like
+plr = None # for access by GUI
 
 class Game:
     def __init__(self):
@@ -57,15 +57,6 @@ class Game:
             p_acts = self.plr.get_combat_actions()
             cmbtwindow.make_plr_actions(p_acts, self.plr.get_availables(p_acts))
 
-            if len(self.room.enemies[0].action_queue) != 0:
-                GUI.log(f'{self.room.enemies[0].action_queue[0].name} : {self.room.enemies[0].action_queue[0].timer}')
-            else:
-                GUI.log(f'Nothing Yet!')
-            if len(self.plr.action_queue) != 0:
-                GUI.log(f'{self.plr.action_queue[0].name} : {self.plr.action_queue[0].timer}')
-            else:
-                GUI.log(f'Nothing Yet!')
-
             # TODO: initiative, currently player always has
 
             # GET PLAYER ACTION IF NONE
@@ -76,9 +67,13 @@ class Game:
                     GUI.log('YOU LOSE YOUR BALANCE!\n')
                     await asyncio.sleep(1)
                 await self.plr_event.wait() # wait for plr input
+                await asyncio.sleep(.4)
 
             # GET ENEMY ACTION IF NONE
-            self.room.enemies[0].take_turn(self.plr)
+            if len(self.room.enemies[0].action_queue) == 0:
+                self.room.enemies[0].take_turn(self.plr)
+                if not isinstance(self.room.enemies[0].action_queue[0], actn.Pause):
+                    await asyncio.sleep(.8)
 
             # increment all current action timers
             self.plr.action_queue[0].timer -= 1
@@ -87,8 +82,10 @@ class Game:
             # resolve actions
             if self.plr.action_queue[0].timer <= 0:
                 self.plr.action_queue[0].resolve()
+                await asyncio.sleep(0.4)
             if self.room.enemies[0].action_queue[0].timer == 0:
                 self.room.enemies[0].action_queue[0].resolve()
+                await asyncio.sleep(0.4)
 
             # kill resolved actions
             if self.plr.action_queue[0].timer <= 0:
@@ -106,14 +103,24 @@ class Game:
             else:
                 room.enemies[0].new_turn()
             
-            GUI.log(' **\n')
-            await asyncio.sleep(0.3)
+            await asyncio.sleep(0.2)
             if self.plr.hp <= 0:
                 input('You Lose!')
                 quit()
         GUI.log('You Win!')
         return self._reload_room()
 
+    def get_enemy_action(self) -> bc.Action:
+        try:
+            return self.room.enemies[0].action_queue[0]
+        except IndexError:
+            pass
+    
+    def get_player_action(self) -> bc.Action:
+        try:
+            return self.plr.action_queue[0]
+        except IndexError:
+            pass
 
 # DEPRECATED -> TODO: remove
     async def get_turn_actions(self, room:bc.Room) -> list[bc.Action]:

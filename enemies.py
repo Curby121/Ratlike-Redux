@@ -27,11 +27,11 @@ class Goblin(bc.Enemy):
     max_hp = 22
     bal_max = 16
     bal_rec = 1
-    dmg_base = 5
+    dmg_base = 3
     stagger_base = 4
     move = 1
     parry_class = actions.Stab
-    strategy_class = st.Basic2
+    strategy_class = st.Basic
     actions = [
         (actions.Lunge, 60),
         (actions.Stab, 30)

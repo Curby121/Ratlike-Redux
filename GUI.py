@@ -181,8 +181,10 @@ class CombatWindow(BaseWindow):
         self.enemy_stats = self.EnemyStats(self, enemies[0])
         self.enemy_stats.place(rely=0.25, relx=0.5, anchor='center')
 
-        self.dist_L = ttk.Label(self, font=('Arial', 14), padding = 4)
-        self.dist_L.place(relx=0.5, rely=0.38, anchor='center')
+        self.enemy_actn = self.ActionLabel(self)
+        self.enemy_actn.place(relx=0.5, rely=0.38, anchor='center')
+        self.player_actn = self.ActionLabel(self)
+        self.player_actn.place(relx=0.5, rely=0.5, anchor='center')
 
         self.Updt()
 
@@ -194,7 +196,8 @@ class CombatWindow(BaseWindow):
     def Updt(self):
         self.plr_stats.update()
         self.enemy_stats.update()
-        self.dist_L.configure(text = f'Dist: {self.enemy_stats.enemy.distance}')
+        self.enemy_actn.update(game.get_enemy_action())
+        self.player_actn.update(game.get_player_action())
     
     class PlrStats(ttk.Frame):
         def __init__(self, root):
@@ -209,7 +212,7 @@ class CombatWindow(BaseWindow):
             self.bal_B.place(relx=0.55, rely=0.55, anchor='nw')
         def update(self):
             self.hp_L.configure(text = f'HP: {game.plr.hp}/{game.plr.max_hp}')
-            self.bal_L.configure(text = f'Ex: {game.plr.balance}/{game.plr.bal_max}')
+            self.bal_L.configure(text = f'Bal: {game.plr.balance}/{game.plr.bal_max}')
             self.hp_B.configure(value = 100*(game.plr.hp / game.plr.max_hp))
             self.bal_B.configure(value = 100*(game.plr.balance / game.plr.bal_max))
 
@@ -227,10 +230,38 @@ class CombatWindow(BaseWindow):
             self.x_B.grid(row=3, column=0)
         def update(self):
             self.hp_L.configure(text = f'HP: {self.enemy.hp}/{self.enemy.max_hp}')
-            self.bal_L.configure(text = f'Ex: {self.enemy.balance}/{self.enemy.bal_max}')
+            self.bal_L.configure(text = f'Bal: {self.enemy.balance}/{self.enemy.bal_max}')
             
         def examine(self):
             log(self.enemy.desc)
+
+    class ActionLabel(ttk.Frame):
+        def __init__(self, root):
+            super().__init__(root)
+            self.name = ttk.Label(self, font=('Arial', 14))
+            self.timer = ttk.Label(self, font=('Arial', 14))
+            self.info = ttk.Button(self,
+                text = 'Info',
+                command = self.x
+                )
+            self.action = None
+            self.name.grid()
+            self.timer.grid(row=0, column=1)
+            self.info.grid(row=1, columnspan=2)
+        
+        def update(self, action):
+            self.action = action
+            if action is None:
+                self.name.configure(text = '...')
+                self.timer.configure(text = '?')
+                self.info.config(state = tk.DISABLED)
+                return
+            self.name.configure(text = action.name)
+            self.timer.configure(text = str(action.timer))
+            self.info.config(state = tk.NORMAL)
+
+        def x(self):
+            examine_action(self.action)
 
     class ActionBar(ObjectBar):
         def __init__(self, root, actions:list, available:list[bool]):
@@ -254,7 +285,7 @@ class CombatWindow(BaseWindow):
                 info_b = ttk.Button(
                     self,
                     text = 'Info',
-                    command = self.examine_action
+                    command = self.x
                     )
                 actn_b.grid(row = 0, ipady = 20)
                 info_b.grid(row = 1)
@@ -264,27 +295,9 @@ class CombatWindow(BaseWindow):
             def choose_action(self):
                 global game
                 game.select_player_action(self.action)
-            def examine_action(self):
-                log('')
-                log(f'{self.action.name}: \n{self.action.desc}')
-                if hasattr(self.action, 'acc'):
-                    log(f'  Accuracy: {self.action.acc}')
-                    log(f'  Parry: {self.action.parry}')
-                if hasattr(self.action, 'reach'):
-                    log(f'  Reach: {self.action.reach}')
-                if hasattr(self.action, 'dmg_mod'):
-                    log(f'  Damage: x{self.action.dmg_mod}')
-                    log(f'  Stagger: x{self.action.stagger_mod}')
-                log(f'  Balance Use    : {self.action.bal_use_cost}')
-                log(f'  Balance Resolve: {self.action.bal_resolve_cost}')
-                if hasattr(self.action, 'styles'):
-                    if len(self.action.styles) > 0:
-                        for i,s in enumerate(self.action.styles):
-                            if i == 0:
-                                ls = [s]
-                            else:
-                                ls.append(f', {s}')
-                        log(f'  Attack Styles: {ls}')
+
+            def x(self):
+                examine_action(self.action)
 
 def init(gme):
     global game
@@ -316,6 +329,24 @@ def EnterCombatRoom(room) -> CombatWindow:
     current_frame.place(relwidth=1.0, relheight=1.0)
     return current_frame
 
+def examine_action(action):
+    log('')
+    log(f'{action.name} | {action.timer}: \n{action.desc}')
+    if hasattr(action, 'acc'):
+        log(f'  Accuracy: {action.acc}')
+        log(f'  Parry: {action.parry}')
+    if hasattr(action, 'dmg_mod'):
+        log(f'  Damage: x{action.dmg_mod}')
+        log(f'  Stagger: x{action.stagger_mod}')
+    log(f'  Balance: {action.bal_use_cost} + {action.bal_resolve_cost}')
+    if hasattr(action, 'styles'):
+        if len(action.styles) > 0:
+            for i,s in enumerate(action.styles):
+                if i == 0:
+                    ls = [s]
+                else:
+                    ls.append(f', {s}')
+            log(f'  Attack Styles: {ls}')
 
 def updt_plr_combat(acts, activated:list[bool]):
     assert isinstance(current_frame, CombatWindow)
