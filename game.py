@@ -27,7 +27,7 @@ class Game:
 
         weapons.Sword().equip(self.plr)
         #weapons.Spear().equip(self.plr)
-        #weapons.WoodenShield().equip(self.plr)
+        weapons.WoodenShield().equip(self.plr)
 
     async def Start(self):
         '''Start and run game'''
@@ -76,8 +76,8 @@ class Game:
                     await asyncio.sleep(.8)
 
             # increment all current action timers
-            self.plr.action_queue[0].timer -= 1
-            self.room.enemies[0].action_queue[0].timer -= 1
+            self.plr.action_queue[0].tick()
+            self.room.enemies[0].action_queue[0].tick()
 
             # resolve actions
             if self.plr.action_queue[0].timer <= 0:

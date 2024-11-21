@@ -95,9 +95,11 @@ class Damageable(Entity):
             GUI.log(f'  {self.name} took {dmg} dmg, {stgr} stgr!')
 
     def new_turn(self):
-        '''Reset bookkeeping for next turn'''
+        '''Reset bookkeeping for next turn, also kills actions if at 0 balance'''
         self.balance = min(self.bal_max, self.balance + self.bal_rec)
         self.balance = max(0, self.balance)
+        if self.balance == 0:
+            self.action_queue.clear()
 
 # an instance of this class is placed on the table when an action is selected
 class Action(Viewable):
@@ -121,6 +123,8 @@ class Action(Viewable):
         return True
     def attack_me(self, atk):
         self.src.damage_me(atk)
+    def tick(self):
+        self.timer -= 1
     def resolve_balance(self) -> None:
         '''Consumes the balance for resolving'''
         self.src.balance -= self.bal_resolve_cost

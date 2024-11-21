@@ -32,7 +32,6 @@ class Chop(bc.Attack):
     stagger_mod = 1.5
     parry = 2
     acc = 6
-    reach = 6
 
 class Stab(bc.Attack):
     '''Default attack for daggers and knives
@@ -77,14 +76,17 @@ class Lunge(bc.Attack):
     stagger_mod = 1.2
     
 class Smash(bc.Attack):
-    '''Med range high stagger'''
+    '''High stagger'''
     name = 'Smash!'
     desc = 'A powerful overhead slam!'
     use_msg = 'smashed viciously!'
-    dmg_mod = 1
-    parry = 2
-    acc = 10
-    stagger_mod = 1.5
+    timer = 6
+    dmg_mod = 1.0
+    stagger_mod = 2.0
+    acc = 6
+    parry = 0
+    bal_use_cost = 2
+    bal_resolve_cost = 4
     styles = ['heavy']
 
 class Bite(bc.Attack):
@@ -145,24 +147,29 @@ class Dodge(bc.CounterAttack):
 class Block(bc.Action):
     name = 'Block'
     desc = 'Shields Up!'
-    timer = 1
+    timer = 3
+    def __init__(self, source: bc.Entity, **kwargs):
+        super().__init__(source, **kwargs)
+        self.efficacy = 0 # one tick happens before any chance to resolve -> minimum of 1
     def attack_me(self, atk:bc.Attack):
         GUI.log(' The attack is blocked!')
         dmg_m = 0
-        stgr_m = 0.5
+        stgr_m = 1
         reflected_stagger = 0.4 * atk.get_stagger()
         if 'heavy' in atk.styles:
-            dmg_m *= 1.75
-            stgr_m *= 1.8
+            dmg_m = 0.25
             reflected_stagger = 0.7 * atk.get_stagger()
         if 'quick' in atk.styles:
-            dmg_m *= 0.8
-            reflected_stagger = 10
-        self.damage_me(atk,
+            reflected_stagger = 5
+        self.src.damage_me(atk,
                        dmg_mod = dmg_m,
                        stagger_mod = stgr_m
                        )
         atk.src._take_damage(0, int(reflected_stagger))
+        self.timer = 0
+    def tick(self):
+        super().tick()
+        self.efficacy += 1
 
 class TrollReady(bc.Action):
     name = 'Troll smash prep'

@@ -40,12 +40,11 @@ class Goblin(bc.Enemy):
 class Skeleton(bc.Enemy):
     name = 'Skeleton'
     desc = 'Rattling bones and a sturdy club.'
-    max_hp = 30
-    bal_max = 75
+    max_hp = 35
+    bal_max = 25
     bal_rec = 1
     dmg_base = 6
-    stagger_base = 10
-    move = 2
+    stagger_base = 6
     parry_class = actions.Block
     strategy_class = st.Basic
     actions = [
