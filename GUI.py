@@ -200,18 +200,18 @@ class CombatWindow(BaseWindow):
         def __init__(self, root):
             super().__init__(root)
             self.hp_L = ttk.Label(self, font=('Arial', 18))
-            self.exh_L = ttk.Label(self, font=('Arial', 18))
+            self.bal_L = ttk.Label(self, font=('Arial', 18))
             self.hp_B = ttk.Progressbar(self, mode = 'determinate')
-            self.exh_B = ttk.Progressbar(self, mode = 'determinate')
+            self.bal_B = ttk.Progressbar(self, mode = 'determinate')
             self.hp_L.place(relx=0.45, rely=0.5, anchor='se')
-            self.exh_L.place(relx=0.55, rely=0.5, anchor='sw')
+            self.bal_L.place(relx=0.55, rely=0.5, anchor='sw')
             self.hp_B.place(relx=0.45, rely=0.55, anchor='ne')
-            self.exh_B.place(relx=0.55, rely=0.55, anchor='nw')
+            self.bal_B.place(relx=0.55, rely=0.55, anchor='nw')
         def update(self):
             self.hp_L.configure(text = f'HP: {game.plr.hp}/{game.plr.max_hp}')
-            self.exh_L.configure(text = f'Ex: {game.plr.exhaust}/{game.plr.max_exh}')
+            self.bal_L.configure(text = f'Ex: {game.plr.balance}/{game.plr.bal_max}')
             self.hp_B.configure(value = 100*(game.plr.hp / game.plr.max_hp))
-            self.exh_B.configure(value = 100*(game.plr.exhaust / game.plr.max_exh))
+            self.bal_B.configure(value = 100*(game.plr.balance / game.plr.bal_max))
 
     class EnemyStats(ttk.Frame):
         def __init__(self, root, enemy):
@@ -220,14 +220,14 @@ class CombatWindow(BaseWindow):
             self.label = ttk.Label(self, text=enemy.name, font=('Arial', 16))
             self.label.grid(row=0, column=0)
             self.hp_L = ttk.Label(self, font=('Arial', 14))
-            self.exh_L = ttk.Label(self, font=('Arial', 14))
+            self.bal_L = ttk.Label(self, font=('Arial', 14))
             self.hp_L.grid(row=1, column=0)
-            self.exh_L.grid(row=2, column=0)
+            self.bal_L.grid(row=2, column=0)
             self.x_B = ttk.Button(self, text='Examine', command = self.examine)
             self.x_B.grid(row=3, column=0)
         def update(self):
             self.hp_L.configure(text = f'HP: {self.enemy.hp}/{self.enemy.max_hp}')
-            self.exh_L.configure(text = f'Ex: {self.enemy.exhaust}/{self.enemy.max_exh}')
+            self.bal_L.configure(text = f'Ex: {self.enemy.balance}/{self.enemy.bal_max}')
             
         def examine(self):
             log(self.enemy.desc)
@@ -275,7 +275,8 @@ class CombatWindow(BaseWindow):
                 if hasattr(self.action, 'dmg_mod'):
                     log(f'  Damage: x{self.action.dmg_mod}')
                     log(f'  Stagger: x{self.action.stagger_mod}')
-                log(f'  Balance Cost: {self.action.exh_cost}')
+                log(f'  Balance Use    : {self.action.bal_use_cost}')
+                log(f'  Balance Resolve: {self.action.bal_resolve_cost}')
                 if hasattr(self.action, 'styles'):
                     if len(self.action.styles) > 0:
                         for i,s in enumerate(self.action.styles):

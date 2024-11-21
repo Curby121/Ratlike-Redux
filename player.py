@@ -5,14 +5,13 @@ class Player(bc.Damageable):
     name = 'Player'
     desc = 'You!'
     dmg_base = 6
-    stagger_base = 7
+    stagger_base = 6
     move = 1
-    current_enemy:bc.Enemy = None # sucks. for finding distance mainly
     def __init__(self):
         plr = {
             'max_hp': 35,
-            'max_exh': 40,
-            'exh_rec': 5
+            'bal_max': 20,
+            'bal_rec': 1
         }
         super().__init__(**plr)
         self.coins = 0
@@ -28,9 +27,9 @@ class Player(bc.Damageable):
         is implemented'''
         print('\n   Enemies:')
         for e in enemies:
-            print(f' {e.name}: {e.hp}/{e.max_hp}  {e.exhaust}/{e.max_exh}')
+            print(f' {e.name}: {e.hp}/{e.max_hp}  {e.balance}/{e.bal_max}')
         
-        print(f'\n You: {self.hp}/{self.max_hp}  {self.exhaust}/{self.max_exh}')
+        print(f'\n You: {self.hp}/{self.max_hp}  {self.balance}/{self.bal_max}')
 
         acts = self.get_combat_actions()
         msg = ''
@@ -47,7 +46,7 @@ class Player(bc.Damageable):
             except Exception as e:
                 print(f'[Err] {e}')
 
-        if self.exhaust >= self.max_exh:
+        if self.balance >= self.bal_max:
             action_class = actions.Pause
         print(f'Chose: {action_class.name}')
         return super().take_turn(action_class, target = enemies[0])
@@ -72,9 +71,7 @@ class Player(bc.Damageable):
                 acts.extend(val.get_actions())
         if len(acts) == 0:
             acts.append(actions.Bite)
-        acts.append(actions.SideStep)
-        acts.append(actions.StepBack)
-        acts.append(actions.Jump)
+        acts.append(actions.Dodge)
         acts.append(actions.Pause)
         return acts
 
@@ -110,9 +107,6 @@ class Player(bc.Damageable):
                     return wep.dmg_base
         else:
             raise Exception('Atk not found in eqp')
-        
-    def getset_distance(self, set = None) -> int:
-        return self.current_enemy.getset_distance(set)
 
     def get_atk_source(self, atk) -> float:
         return self.get_weapon_with_attack(atk)

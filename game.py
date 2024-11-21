@@ -17,7 +17,6 @@ class Game:
         self.plr = player.Player()
         global plr
         plr = self.plr
-        self.plr_action:bc.Action = None
         self.room = None
 
         # for holding execution for when a player descision needs to be made
@@ -51,58 +50,76 @@ class Game:
 
     async def StartCombat(self, room:bc.Room):
         cmbtwindow = GUI.EnterCombatRoom(room)
-        self.plr.exhaust = 0
-        self.plr.current_enemy = room.enemies[0]
+        self.plr.balance = self.plr.bal_max
 
         while len(room.enemies) > 0:
             # update gui
             p_acts = self.plr.get_combat_actions()
             cmbtwindow.make_plr_actions(p_acts, self.plr.get_availables(p_acts))
 
-            # get action list
-            actions = await self.get_turn_actions(room)
-            longest_reach = 0
-            for a in actions:
-                if a.reach > longest_reach:
-                    longest_reach = a.reach
+            if len(self.room.enemies[0].action_queue) != 0:
+                GUI.log(f'{self.room.enemies[0].action_queue[0].name} : {self.room.enemies[0].action_queue[0].timer}')
+            else:
+                GUI.log(f'Nothing Yet!')
+            if len(self.plr.action_queue) != 0:
+                GUI.log(f'{self.plr.action_queue[0].name} : {self.plr.action_queue[0].timer}')
+            else:
+                GUI.log(f'Nothing Yet!')
 
-            # pre turns are some move actions
-            for a in actions:
-                a.pre_turn()
+            # TODO: initiative, currently player always has
 
-            # Action resolution
-            for a in actions:
-                # TODO: comprehensive death checks
-                if a.src.hp <= 0:
-                    continue
-                if a.src.exhaust >= a.src.max_exh and\
-                    not isinstance(a, actn.Pause):
-                    GUI.log(f'{a.src.name} stumbles...')
-                    continue
-                a.resolve()
-                await asyncio.sleep(.5) # animation delay
+            # GET PLAYER ACTION IF NONE
+            if len(self.plr.action_queue) == 0:
+                self.plr_event.clear() # ensure entering room set() doesnt stick
+                if self.plr.balance <= 0:
+                    self.select_player_action(actn.Pause)
+                    GUI.log('YOU LOSE YOUR BALANCE!\n')
+                    await asyncio.sleep(1)
+                await self.plr_event.wait() # wait for plr input
+
+            # GET ENEMY ACTION IF NONE
+            self.room.enemies[0].take_turn(self.plr)
+
+            # increment all current action timers
+            self.plr.action_queue[0].timer -= 1
+            self.room.enemies[0].action_queue[0].timer -= 1
+
+            # resolve actions
+            if self.plr.action_queue[0].timer <= 0:
+                self.plr.action_queue[0].resolve()
+            if self.room.enemies[0].action_queue[0].timer == 0:
+                self.room.enemies[0].action_queue[0].resolve()
+
+            # kill resolved actions
+            if self.plr.action_queue[0].timer <= 0:
+                self.plr.action_queue[0].resolve_balance()
+                self.plr.action_queue.pop(0)
+            if self.room.enemies[0].action_queue[0].timer <= 0:
+                self.room.enemies[0].action_queue[0].resolve_balance()
+                self.room.enemies[0].action_queue.pop(0)
                 
             # new turn bookkeeping
             i = 0
             self.plr.new_turn()
-            while i < len(room.enemies): # kill checks
-                if room.enemies[i].hp <= 0:
-                    room.enemies.remove(room.enemies[i])
-                else:
-                    room.enemies[i].new_turn()
-                    i += 1
+            if room.enemies[0].hp <= 0:
+                room.enemies.remove(room.enemies[0])
+            else:
+                room.enemies[0].new_turn()
             
             GUI.log(' **\n')
+            await asyncio.sleep(0.3)
             if self.plr.hp <= 0:
                 input('You Lose!')
                 quit()
         GUI.log('You Win!')
         return self._reload_room()
 
+
+# DEPRECATED -> TODO: remove
     async def get_turn_actions(self, room:bc.Room) -> list[bc.Action]:
         actions = []
         self.plr_event.clear() # ensure entering room set() doesnt stick
-        if self.plr.exhaust >= self.plr.max_exh:
+        if self.plr.balance >= self.plr.bal_max:
             self.select_player_action(actn.Pause)
             GUI.log('YOU LOSE YOUR BALANCE!\n')
             await asyncio.sleep(1)
@@ -111,17 +128,20 @@ class Game:
         # enemy actions
         for e in room.enemies:
             actions.append(e.take_turn(self.plr))
-        actions = sort_actions(self.plr_action, actions)
-        return actions
+
+        #actions = sort_actions(self.plr_action, actions)
+        lst = [self.plr_action]
+        lst.append(actions)
+        return lst
 
     def select_player_action(self, action:bc.Action):
         '''Sets player combat action.'''
-        self.plr_action = action(
+        new_action = action(
             source = self.plr
         )
-        self.plr.action = self.plr_action
-        if isinstance(self.plr_action, bc.Attack):
-            self.plr_action.tgt = self.room.enemies[0]
+        if isinstance(new_action, bc.Attack):
+            new_action.tgt = self.room.enemies[0]
+        self.plr.action_queue.append(new_action)
         self.plr_event.set()
 
     def on_object_action(self, obj:bc.RoomObject, index:int):
@@ -136,6 +156,7 @@ class Game:
         '''Called to refresh the GUI'''
         return self.try_move_room(self.room)
     
+# DEPRECATED -> TODO: remove
 def sort_actions(plr_action:bc.Action, actions:list[bc.Action]) -> list[bc.Action]:
     non_atks = []
     a_sorted = []
