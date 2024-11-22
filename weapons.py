@@ -6,8 +6,8 @@ class Dagger(bc.Weapon):
     desc = 'Stick em with the pointy end!'
     slot = 'Primary'
     value = 5
-    dmg_base = 10
-    parry_mod = 0.2
+    dmg_base = 5
+    parry = 4
     attacks = [
         actions.Stab,
         actions.DaggerStab
@@ -21,6 +21,7 @@ class Sword(bc.Weapon):
     slot = 'Primary'
     value = 15
     dmg_base = 5
+    parry = 8
     attacks = [
         actions.Slash,
         actions.Chop

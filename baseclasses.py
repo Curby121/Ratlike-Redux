@@ -51,7 +51,7 @@ class Entity(Viewable):
         return True
     def take_turn(self):
         raise Exception(f'No turn defined for {self.name}')
-    def get_atk_source(self, atk) -> float:
+    def get_atk_source(self, *args):
         '''On the player this returns the weapon, on enemies it returns the enemy'''
         raise NotImplementedError
 
@@ -108,12 +108,12 @@ class Damageable(Entity):
 
 # an instance of this class is placed on the table when an action is selected
 class Action(Viewable):
-    '''Combat specific actions. All actions have a source and can be targetted
-    by Attacks'''
+    '''Combat specific actions, all of which have a timer (actions to complete) a source, balance costs, and a parry mod'''
+    timer:int = 4
     bal_use_cost:int = 0
     bal_resolve_cost:int = 0
+    parry_mod:float = 1.0
     use_msg:str = None
-    timer:int = 4
     balance_max:int = 0.5 # off balance is: exh > max_exh * balance_max
     def __init__(self, source:Entity, **kwargs):
         super().__init__(**kwargs)
@@ -126,45 +126,13 @@ class Action(Viewable):
         if self.use_msg is not None and not self.silent:
             GUI.log(f'{self.src.name} {self.use_msg}')
         return True
-    def attack_me(self, atk):
-        self.src.damage_me(atk)
-    def tick(self):
-        self.timer -= 1
-    def resolve_balance(self) -> None:
-        '''Consumes the balance for resolving'''
-        self.src.balance -= self.bal_resolve_cost
-
-# TODO: Damage calculation based on weapon / skills etc
-# TODO: tie weapon to attack (as source)      i think this got done?
-class Attack(Action):
-    '''Attacks are an Action that have a target.\n
-    All attacks have a damage, stagger, and reach'''
-    tgt:Damageable
-    reach:int
-    acc:int
-    parry:int
-    stagger_mod:float
-    dmg_mod:float
-    styles:list[str] = []
-
-    def __init__(self, source: Entity, **kwargs):
-        self.parry = int(source.get_atk_source(self).parry_mod * self.parry)
-        self.parry = max(1, self.parry)
-        super().__init__(source, **kwargs)
-
-    # TODO: cleanup
-    def resolve(self) -> bool:
-        if not super().resolve():
-            return False
-        self.tgt.attack_me(atk = self)
-        return True
-
+    
     # parry checks / defense
     acc_base = 0.5 # accuracy modifier at 0 balance
-    def attack_me(self, atk:Action):
+    def attack_me(self, atk):
         def_mod = self.src.balance / self.src.bal_max
         off_mod = (atk.src.balance / atk.src.bal_max) * self.acc_base
-        def_max = int(self.parry * def_mod)
+        def_max = int(self.parry_mod * def_mod)
         off_max = int(atk.acc * (self.acc_base + off_mod))
 
         # parry
@@ -176,18 +144,41 @@ class Attack(Action):
             return
         
         # blocking
-        def_max = 3
+        def_max = 2
         def_roll = random.randint(1, def_max +1)
         print(f'block roll/max: {def_roll}/{def_max +1}')
         if def_roll >= off_roll:
             GUI.log(' The attack is deflected!')
             return
-            """ return self.src.damage_me(
-                atk,
-                dmg_mod = 0,
-                stagger_mod = 0.5
-                ) """
         return self.src.damage_me(atk)
+    
+    def tick(self):
+        self.timer -= 1
+    def resolve_balance(self) -> None:
+        '''Consumes the balance for resolving'''
+        self.src.balance -= self.bal_resolve_cost
+
+# TODO: Damage calculation based on weapon / skills etc
+class Attack(Action):
+    '''Attacks are an Action that have a target.\n
+    All attacks have damage and stagger mods'''
+    tgt:Damageable
+    acc:int
+    stagger_mod:float
+    dmg_mod:float
+    styles:list[str] = []
+
+    def __init__(self, source: Entity, **kwargs):
+        self.parry_mod = int(source.get_atk_source(self).parry * self.parry_mod)
+        self.parry_mod = max(1, self.parry_mod)
+        super().__init__(source, **kwargs)
+
+    # TODO: cleanup
+    def resolve(self) -> bool:
+        if not super().resolve():
+            return False
+        self.tgt.attack_me(atk = self)
+        return True
 
     def in_range(self, bonus:int = 0):
         if self.reach + bonus >= self.src.getset_distance():
@@ -202,6 +193,13 @@ class Attack(Action):
     def get_stagger(self) -> int:
         #print(f'attack stgr: {self.src.stagger_base} * {self.stagger_mod}')
         return self.src.stagger_base * self.stagger_mod
+
+class Channel(Action):
+    '''Actions that perform differently the longer they are in use'''
+    efficacy = 0 # one tick happens before any chance to resolve -> minimum of 1
+    def tick(self):
+        self.efficacy += 1
+        return super().tick()
 
 class Strategy:
     '''Base Class for enemy attack AI.'''
@@ -219,7 +217,7 @@ class Enemy(Damageable):
     and will be given chances to attack'''
     actions:list[Action]
     weights:list[int]
-    parry_mod:float = 1.0
+    parry:int = 4
     strategy_class:Strategy
     parry_class:Attack
     
@@ -253,7 +251,8 @@ class Item(Viewable):
             print(f'{self.name} has no value')
     def take(self):
         print(f'take(): {self}')
- 
+
+# Deprecated ? - Currently unused
 class CounterAttack(Action):
     '''Base class that stores an attack that is performed later'''
     def __init__(self, reaction:Attack, source: Entity, **kwargs):
@@ -286,9 +285,7 @@ class Weapon(Equippable):
     Weapons must have a style. Paradigm is melee by default'''
     attacks:list[Action]
     dmg_base:int
-    parry_mod:float = 1.0
-    parry_class:Attack
-    dodge_class:Attack = None
+    parry:int = 1
     def __init__(self, **kwargs):
         self.paradigm = 'melee'
         super().__init__(**kwargs)

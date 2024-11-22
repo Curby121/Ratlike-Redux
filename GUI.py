@@ -333,12 +333,12 @@ def examine_action(action):
     log('')
     log(f'{action.name} | {action.timer}: \n{action.desc}')
     if hasattr(action, 'acc'):
-        log(f'  Accuracy: {action.acc}')
-        log(f'  Parry: {action.parry}')
+        log(f'  Accuracy:  {action.acc}')
+        log(f'  Parry:    x{action.parry_mod}')
     if hasattr(action, 'dmg_mod'):
-        log(f'  Damage: x{action.dmg_mod}')
-        log(f'  Stagger: x{action.stagger_mod}')
-    log(f'  Balance: {action.bal_use_cost} | {action.bal_resolve_cost} : {action.bal_use_cost+action.bal_resolve_cost}')
+        log(f'  Damage:   x{action.dmg_mod}')
+        log(f'  Stagger:  x{action.stagger_mod}')
+    log    (f'  Balance:   {action.bal_use_cost+action.bal_resolve_cost} ({action.bal_use_cost},{action.bal_resolve_cost})')
     if hasattr(action, 'styles'):
         if len(action.styles) > 0:
             for i,s in enumerate(action.styles):
