@@ -33,8 +33,8 @@ class Goblin(bc.Enemy):
     parry_class = actions.Stab
     strategy_class = st.Basic
     actions = [
-        (actions.Lunge, 60),
-        (actions.Stab, 30)
+        (actions.Lunge, 20),
+        (actions.Stab, 50)
     ]
 
 class Skeleton(bc.Enemy):
@@ -50,7 +50,7 @@ class Skeleton(bc.Enemy):
     actions = [
         (actions.Smash, 60),
         (actions.Chop, 40),
-        (actions.Block, 35)
+        (actions.Block, 15)
     ]
 
 class CaveTroll(bc.Enemy):

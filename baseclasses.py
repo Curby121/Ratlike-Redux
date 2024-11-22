@@ -39,7 +39,7 @@ class Entity(Viewable):
     # doesnt do what it says, returns if balance > 0
     def off_balance(self, cost:int = 0) -> bool:
         '''Returns true if entity cannot spent cost in balance'''
-        return self.balance < cost
+        return self.balance <= cost
     def get_reaction(self):
         return None
     def get_parry_class(self):
@@ -101,6 +101,10 @@ class Damageable(Entity):
         self.balance = max(0, self.balance)
         if self.balance == 0:
             self.action_queue.clear()
+            import actions # gross
+            self.action_queue.append(
+                actions.Stagger(self)
+            )
 
 # an instance of this class is placed on the table when an action is selected
 class Action(Viewable):
@@ -155,27 +159,34 @@ class Attack(Action):
         self.tgt.attack_me(atk = self)
         return True
 
-    # parry checks
+    # parry checks / defense
+    acc_base = 0.5 # accuracy modifier at 0 balance
     def attack_me(self, atk:Action):
         def_mod = self.src.balance / self.src.bal_max
-        off_mod = (atk.src.balance / atk.src.bal_max) / 2
+        off_mod = (atk.src.balance / atk.src.bal_max) * self.acc_base
         def_max = int(self.parry * def_mod)
-        off_max = int(atk.acc * (0.5 + off_mod))
-        if off_max <= 0:
-            print(f'offmax: {off_max} |{atk}')
+        off_max = int(atk.acc * (self.acc_base + off_mod))
+
+        # parry
         def_roll = random.randint(1, def_max + 1)
         off_roll = random.randint(1, off_max + 1)
-        print(f'PARRY CHECK: off/def: {off_roll} / {def_roll} || {off_max+1} / {def_max+1}   mods:{off_mod} / {def_mod}')
-        if def_roll >= off_roll * 2:
+        print(f'PARRY roll: off/def: {off_roll}v{def_roll} || {off_max+1}v{def_max+1}   mods:{off_mod+self.acc_base} v {def_mod}')
+        if def_roll > off_roll:
             GUI.log(' The attack is parried!')
             return
-        if def_roll *2 >= off_roll:
-            GUI.log(' A glancing blow!')
-            return self.src.damage_me(
+        
+        # blocking
+        def_max = 3
+        def_roll = random.randint(1, def_max +1)
+        print(f'block roll/max: {def_roll}/{def_max +1}')
+        if def_roll >= off_roll:
+            GUI.log(' The attack is deflected!')
+            return
+            """ return self.src.damage_me(
                 atk,
                 dmg_mod = 0,
                 stagger_mod = 0.5
-                )
+                ) """
         return self.src.damage_me(atk)
 
     def in_range(self, bonus:int = 0):
@@ -196,6 +207,8 @@ class Strategy:
     '''Base Class for enemy attack AI.'''
     def __init__(self, parent:Damageable) -> None:
         self.parent:Damageable = parent
+        import game
+        self.player = game.plr
     def get_action(self) -> Action:
         '''Should always be overwritten by inhereted members'''
         return random.choice(self.parent.actions)[0](source = self.parent)

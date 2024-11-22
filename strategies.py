@@ -2,7 +2,7 @@
 import baseclasses as bc
 import actions
 import random
-import game
+import player
 random.seed()
 
 class Basic(bc.Strategy):
@@ -19,12 +19,12 @@ class Basic(bc.Strategy):
         for i,a in enumerate(actns):
             if not self.parent.can_use_action(a):
                 wgts[i] = 0
-        
+
         for i,a in enumerate(actns):
             # percentage of exhaust meter filled after using attack
             x = (self.parent.balance\
-                 - a.bal_use_cost - a.bal_resolve_cost\
-                    + self.parent.bal_rec) / self.parent.bal_max
+                 - a.bal_use_cost - a.bal_resolve_cost)\
+                     / self.parent.bal_max
             wgts[i] = int(wgts[i] * (x**2))
         if sum(wgts) <= 0:
             print(f'{self.parent.name} has no actions avail: wgts: {wgts}')

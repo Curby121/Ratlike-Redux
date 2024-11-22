@@ -10,6 +10,16 @@ class Pause(bc.Action):
     balance_max = -1
     bal_use_cost = -1
 
+class Stagger(bc.Action):
+    name = 'Teetering'
+    desc = 'This unit is recovering after being knocked over'
+    timer = 4
+    bal_use_cost = -1
+    def tick(self):
+        print('stand tick')
+        self.src.balance += 1
+        return super().tick()
+
 class Slash(bc.Attack):
     '''Default attack for bladed weapons
     good defensive, but needs to win parry fights to build advantage'''
@@ -17,11 +27,11 @@ class Slash(bc.Attack):
     desc = '''The simplest of blade techniques, its stance allows the user to keep their guard up against incoming attacks.'''
     use_msg = 'slashes.'
     dmg_mod = 0.75
-    stagger_mod = 1.0
+    stagger_mod = 0.5
     parry = 8
-    acc = 4
-    bal_use_cost = 2
-    bal_resolve_cost = -2
+    acc = 5
+    bal_use_cost = 1
+    bal_resolve_cost = -1
     reach = 5
 
 class Chop(bc.Attack):
@@ -29,12 +39,12 @@ class Chop(bc.Attack):
     desc = '''A targeted swing will hurt more, but leaves its user more vulnerable'''
     use_msg = 'chops!'
     timer = 5
-    bal_use_cost = 3
-    bal_resolve_cost = -1
     dmg_mod = 1.0
     stagger_mod = 1.0
+    acc = 7
     parry = 3
-    acc = 6
+    bal_use_cost = 2
+    bal_resolve_cost = -1
 
 class Stab(bc.Attack):
     '''Default attack for daggers and knives
@@ -43,11 +53,11 @@ class Stab(bc.Attack):
     desc = 'A hard stab'
     use_msg = 'stabs quickly.'
     timer = 3
-    bal_use_cost = 5
-    bal_resolve_cost = -4
+    bal_use_cost = 2
+    bal_resolve_cost = -1
     dmg_mod = 1
-    parry = 4
-    acc = 4
+    parry = 2
+    acc = 7
     stagger_mod = 0.5
     reach = 3
     styles = ['quick']
@@ -59,9 +69,9 @@ class Lunge(bc.Attack):
     use_msg = 'lunged with their spear!'
     dmg_mod = 2.0
     stagger_mod = 1.5
-    timer = 5
-    bal_use_cost = 4
-    bal_resolve_cost = -3
+    timer = 6
+    bal_use_cost = 1
+    bal_resolve_cost = 2
     acc = 11
     parry = 0
     stagger_mod = 1.2
@@ -71,13 +81,13 @@ class Smash(bc.Attack):
     name = 'Smash!'
     desc = 'A powerful overhead slam!'
     use_msg = 'smashed viciously!'
-    timer = 6
+    timer = 7
     dmg_mod = 1.0
     stagger_mod = 2.0
     acc = 8
     parry = 0
     bal_use_cost = 5
-    bal_resolve_cost = -4
+    bal_resolve_cost = -3
     styles = ['heavy']
 
 class DaggerStab(bc.Attack):
@@ -161,20 +171,26 @@ class Block(bc.Action):
             dmg_m, stgr_m = 0.25, 1
         elif self.efficacy == 2:
             dmg_m, stgr_m = 0, 0.75
-        elif self.efficacy == 3:
+        else:
             dmg_m, stgr_m = 0, 0.5
-        reflected_stagger = 0.4 * atk.get_stagger()
 
+        reflected_stagger = 0.4 * atk.get_stagger()
         if 'heavy' in atk.styles:
             dmg_m *= 2.0
-            reflected_stagger = 0
         if 'quick' in atk.styles:
             reflected_stagger = self.src.stagger_base
+            stgr_m = 0
+
+        if self.efficacy == 1: # no reflection on 1 turn block
+            reflected_stagger = 0
+            
         self.src.damage_me(atk,
                        dmg_mod = dmg_m,
                        stagger_mod = stgr_m
                        )
-        atk.src._take_damage(0, int(reflected_stagger))
+        reflected_stagger = int(reflected_stagger)
+        if reflected_stagger > 0:
+            atk.src._take_damage(0, reflected_stagger)
         self.timer = 0
     def tick(self):
         super().tick()

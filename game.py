@@ -10,7 +10,7 @@ import player
 import weapons
 import GUI
 
-plr = None # for access by GUI
+plr = None # for access externally
 
 class Game:
     def __init__(self):
