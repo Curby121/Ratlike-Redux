@@ -8,7 +8,7 @@ class LabyrinthRoom(bc.Room):
     encounters = [
         ([enemies.Rat], 0),
         ([enemies.Goblin], 30),
-        ([enemies.Skeleton], 20),
+        ([enemies.Skeleton], 15),
         ([], 40)
     ]
     centerpieces = [

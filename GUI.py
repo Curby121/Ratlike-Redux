@@ -338,7 +338,7 @@ def examine_action(action):
     if hasattr(action, 'dmg_mod'):
         log(f'  Damage: x{action.dmg_mod}')
         log(f'  Stagger: x{action.stagger_mod}')
-    log(f'  Balance: {action.bal_use_cost} + {action.bal_resolve_cost}')
+    log(f'  Balance: {action.bal_use_cost} | {action.bal_resolve_cost} : {action.bal_use_cost+action.bal_resolve_cost}')
     if hasattr(action, 'styles'):
         if len(action.styles) > 0:
             for i,s in enumerate(action.styles):

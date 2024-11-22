@@ -96,7 +96,8 @@ class Damageable(Entity):
 
     def new_turn(self):
         '''Reset bookkeeping for next turn, also kills actions if at 0 balance'''
-        self.balance = min(self.bal_max, self.balance + self.bal_rec)
+        #self.balance = min(self.bal_max, self.balance + self.bal_rec)
+        self.balance = min(self.bal_max, self.balance)
         self.balance = max(0, self.balance)
         if self.balance == 0:
             self.action_queue.clear()
@@ -148,11 +149,8 @@ class Attack(Action):
         super().__init__(source, **kwargs)
 
     # TODO: cleanup
-    def resolve(self, reaction:bool = False) -> bool:
-        resolves = True
+    def resolve(self) -> bool:
         if not super().resolve():
-            return False
-        if not resolves:
             return False
         self.tgt.attack_me(atk = self)
         return True
@@ -168,9 +166,11 @@ class Attack(Action):
         def_roll = random.randint(1, def_max + 1)
         off_roll = random.randint(1, off_max + 1)
         print(f'PARRY CHECK: off/def: {off_roll} / {def_roll} || {off_max+1} / {def_max+1}   mods:{off_mod} / {def_mod}')
-        if def_roll >= off_roll:
+        if def_roll >= off_roll * 2:
             GUI.log(' The attack is parried!')
             return
+        if def_roll *2 >= off_roll:
+            GUI.log(' A glancing blow!')
             return self.src.damage_me(
                 atk,
                 dmg_mod = 0,

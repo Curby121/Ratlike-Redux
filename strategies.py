@@ -16,7 +16,6 @@ class Basic(bc.Strategy):
         wgts = []
         wgts.extend(w)
 
-
         for i,a in enumerate(actns):
             if not self.parent.can_use_action(a):
                 wgts[i] = 0
