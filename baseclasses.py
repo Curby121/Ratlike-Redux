@@ -130,28 +130,39 @@ class Action(Viewable):
     # parry checks / defense
     acc_base = 0.5 # accuracy modifier at 0 balance
     def attack_me(self, atk):
-        def_mod = self.src.balance / self.src.bal_max
-        off_mod = (atk.src.balance / atk.src.bal_max) * self.acc_base
-        def_max = int(self.parry_mod * def_mod)
-        off_max = int(atk.acc * (self.acc_base + off_mod))
-
-        # parry
-        def_roll = random.randint(1, def_max + 1)
-        off_roll = random.randint(1, off_max + 1)
-        print(f'PARRY roll: off/def: {off_roll}v{def_roll} || {off_max+1}v{def_max+1}   mods:{off_mod+self.acc_base} v {def_mod}')
-        if def_roll > off_roll:
+        off_roll = atk._roll_offense()
+        if self.parry_check(atk, off_roll):
             GUI.log(' The attack is parried!')
             return
-        
-        # blocking
-        def_max = 2
-        def_roll = random.randint(1, def_max +1)
-        print(f'block roll/max: {def_roll}/{def_max +1}')
-        if def_roll >= off_roll:
+        if self.deflect_check(self, off_roll):
             GUI.log(' The attack is deflected!')
             return
         return self.src.damage_me(atk)
     
+    def parry_check(self, atk, off_roll:int = None) -> bool:
+        '''Check if this attack parries an attacker'''
+        def_mod = self.src.balance / self.src.bal_max
+        def_max = int(self.parry_mod * def_mod)
+        def_roll = random.randint(1, def_max + 1)
+        if off_roll is None:
+            off_roll = atk._roll_offense()
+        print(f'{self.src.name}\'s {self.name} pry: {def_roll}/{def_max+1}  x{def_mod}')
+        if def_roll > off_roll:
+            return True
+        return False
+
+    # this should probably live in Entity class
+    def deflect_check(self, atk, off_roll:int = None) -> bool:
+        '''Check if an attack is deflected by this actions source'''
+        if off_roll is None:
+            off_roll = atk._roll_offense()
+        def_max = 2
+        def_roll = random.randint(1, def_max +1)
+        print(f'{self.src.name}\'s {self.name} def: {def_roll}/{def_max+1}')
+        if def_roll >= off_roll:
+            return True
+        return False
+
     def tick(self):
         self.timer -= 1
     def resolve_balance(self) -> None:
@@ -185,14 +196,19 @@ class Attack(Action):
             return True
         else:
             return False
-
     def get_dmg(self) -> int:
         self.src: Enemy
         return self.src.get_atk_source(self).dmg_base * self.dmg_mod * self.eff
-    # stagger not effected by eff ?
     def get_stagger(self) -> int:
-        #print(f'attack stgr: {self.src.stagger_base} * {self.stagger_mod}')
         return self.src.stagger_base * self.stagger_mod
+
+    def _roll_offense(self) -> int:
+        '''Roll this attacks offense'''
+        off_mod = (self.src.balance / self.src.bal_max) * self.acc_base
+        off_max = int(self.acc * (self.acc_base + off_mod))
+        roll = random.randint(1, off_max + 1)
+        print(f'{self.src.name}\'s {self.name} atk: {roll}/{off_max+1}  x{off_mod+self.acc_base}')
+        return roll
 
 class Channel(Action):
     '''Actions that perform differently the longer they are in use'''

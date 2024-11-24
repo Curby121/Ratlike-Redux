@@ -7,7 +7,11 @@ game_instance = None
 
 if __name__ == "__main__":
     game_instance = game.Game()
-    asyncio.run(game_instance.Start())
+    try:
+        asyncio.run(game_instance.Start())
+    except KeyboardInterrupt:
+        print('\n****\nKeyboard Interrupt: Kill program \n')
+        quit()
 
 else:
     print('whuh woah')

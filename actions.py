@@ -12,7 +12,7 @@ class Pause(bc.Action):
 
 class Stagger(bc.Action):
     name = 'Teetering'
-    desc = 'This unit is recovering after being knocked over'
+    desc = 'This unit is recovering after being knocked off balance!'
     timer = 4
     bal_use_cost = -1
     def tick(self):
@@ -39,7 +39,7 @@ class Chop(bc.Attack):
     use_msg = 'chops!'
     timer = 5
     dmg_mod = 1.0
-    stagger_mod = 1.5
+    stagger_mod = 1.0
     acc = 7
     parry_mod = 0.5
     bal_use_cost = 2
@@ -86,7 +86,7 @@ class Smash(bc.Attack):
     acc = 8
     parry_mod = 0
     bal_use_cost = 5
-    bal_resolve_cost = -3
+    bal_resolve_cost = -2
     styles = ['heavy']
 
 class DaggerStab(bc.Attack):
@@ -118,10 +118,11 @@ class RatJump(bc.Attack):
 class Dodge(bc.Channel):
     '''Standard Dodge action. Checks for a reaction_class on it\'s source.'''
     name = 'Dodge'
-    desc = 'Attempt to dodge. A dodge action takes 2 actions to prepare, and then dodges for 2 actions.'
+    desc = 'Attempt to dodge. A dodge action takes 2 actions to prepare, and then dodges for the remainder.'
     use_msg = 'dodged!'
-    timer = 4
-    bal_use_cost = 1
+    timer = 5
+    bal_use_cost = 3
+    bal_resolve_cost = -1
     def __init__(self, source: bc.Entity, **kwargs):
         super().__init__(source, **kwargs)
         self.used:bool = False
@@ -160,50 +161,42 @@ class Block(bc.Channel):
     desc = 'Block the next attack. Block is more effective the longer it is held, up to 3'
     timer = 3
     bal_use_cost = -1
+    reflect_mod = 0.5
     def __init__(self, source: bc.Entity, **kwargs):
         super().__init__(source, **kwargs)
     def attack_me(self, atk:bc.Attack):
-        if self.efficacy == 1:
+        self.timer = 0
+        if self.deflect_check(atk):
+            dmg_m, stgr_m = 0, 0
+            GUI.log(' The attack is deflected!')
+        elif self.efficacy == 1:
             dmg_m, stgr_m = 0.25, 1
             GUI.log(' Some of the attack is blocked!')
         elif self.efficacy == 2:
-            dmg_m, stgr_m = 0, 0.75
+            dmg_m, stgr_m = 0, 0.67
             GUI.log(' The attack is blocked!')
         else:
             dmg_m, stgr_m = 0, 0.5
             GUI.log(' The attack is blocked!')
 
-        reflected_stagger = 0.4 * atk.get_stagger()
+        reflected_stagger = self.src.stagger_base * self.reflect_mod
+
         if 'heavy' in atk.styles:
             dmg_m *= 2.0
+            reflected_stagger = 0
         if 'quick' in atk.styles:
-            reflected_stagger = self.src.stagger_base
             stgr_m = 0
-
+        
         if self.efficacy == 1: # no reflection on 1 turn block
             reflected_stagger = 0
             
-        self.src.damage_me(atk,
-                       dmg_mod = dmg_m,
-                       stagger_mod = stgr_m
-                       )
+        if dmg_m > 0 or stgr_m > 0:
+            self.src.damage_me(atk, dmg_m, stgr_m)
         reflected_stagger = int(reflected_stagger)
         if reflected_stagger > 0:
             atk.src._take_damage(0, reflected_stagger)
-        self.timer = 0
 
 class TrollReady(bc.Action):
     name = 'Troll smash prep'
     desc = ''
     use_msg = 'raises his club over his head!'
-
-class Talk(bc.Attack):
-    '''high stagger'''
-    name = 'Talk'
-    desc = 'Say it, dont spray it'
-    use_msg = 'HELLO WORLD!'
-    dmg_mod = 1
-    stagger_mod = 2.5
-    reach = 7
-    exh_cost = 0
-    styles = ['quick']

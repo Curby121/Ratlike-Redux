@@ -5,7 +5,7 @@ class Player(bc.Damageable):
     name = 'Player'
     desc = 'You!'
     dmg_base = 5
-    stagger_base = 2
+    stagger_base = 3
     move = 1
     def __init__(self):
         plr = {
