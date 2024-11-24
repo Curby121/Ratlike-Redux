@@ -31,11 +31,46 @@ class Entity(Viewable):
     move:int
     def __init__(self, **kwargs) -> None:
         self.action_queue:list[Action] = []
+        self.effects:list[str] = []
         super().__init__(**kwargs)
         self.balance = self.bal_max
-    def getset_distance(self, set = None) -> int:
-        return NotImplementedError
+        
+        lst = self.gen_effects([])
+        if lst is not None:
+            for eff in lst:
+                a = getattr(self, eff.id, None)
+                if a is not None:
+                    print(f'attribute found in init:{a}')
+                    a.append(eff)
+                else:
+                    setattr(self, eff.id, [eff])
+                    self.effects.append(eff.id)
+
+    def effect_call(self, name:str):
+        '''Activate all effects with name as attribute name'''
+        fn_list = getattr(self, name, None)
+        if fn_list is not None:
+            for fn in fn_list:
+                fn(self)
+    # override this on things with effects. adding the effect fn to the end of the list
+    # effects should be a function titled the same as the string passed to effect_call() when it is called
+    # returns a list of functions (see effects.py)
+    def gen_effects(self, effs:list) -> list:
+        if effs == []:
+            return None
+        return effs
     
+    def remove_effect(self, name:str = None):
+        '''Removes attr by name. not supplying a name will remove all effects'''
+        if name is None:
+            for str in self.effects():
+                delattr(self, str)
+            self.effects.clear()
+            return
+        assert name in self.effects
+        self.effects.remove(name)
+        delattr(self, name)
+
     # doesnt do what it says, returns if balance > 0
     def off_balance(self, cost:int = 0) -> bool:
         '''Returns true if entity cannot spent cost in balance'''
@@ -165,6 +200,7 @@ class Action(Viewable):
 
     def tick(self):
         self.timer -= 1
+        self.src.effect_call('on_tick')
     def resolve_balance(self) -> None:
         '''Consumes the balance for resolving'''
         self.src.balance -= self.bal_resolve_cost

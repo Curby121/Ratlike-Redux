@@ -105,10 +105,11 @@ class Bite(bc.Attack):
     name = 'Bite'
     desc = 'Chomp!'
     use_msg = 'bites ferociously!'
+    timer = 3
     dmg_mod = 0.5
-    parry_mod = 0
+    parry_mod = 1
     acc = 10
-    stagger_mod = 0.3
+    stagger_mod = 0.5
 
 class RatJump(bc.Attack):
     name = 'Leap'
