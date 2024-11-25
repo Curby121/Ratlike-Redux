@@ -18,6 +18,9 @@ class Viewable:
     def examine(self):
         GUI.log(f"{self.name}. {self.desc}")
 
+class Effect(Viewable):
+    pass
+
 # might not be useful. All entities so far are damageables
 # TODO:? Merge with damageable, have 'damageable' just as a bool
 class Entity(Viewable):
@@ -31,54 +34,25 @@ class Entity(Viewable):
     move:int
     def __init__(self, **kwargs) -> None:
         self.action_queue:list[Action] = []
-        self.effects:list[str] = []
+        self.effects:list[Effect] = []
         super().__init__(**kwargs)
         self.balance = self.bal_max
-        
-        lst = self.gen_effects([])
-        if lst is not None:
-            for eff in lst:
-                a = getattr(self, eff.id, None)
-                if a is not None:
-                    print(f'attribute found in init:{a}')
-                    a.append(eff)
-                else:
-                    setattr(self, eff.id, [eff])
-                    self.effects.append(eff.id)
 
-    def effect_call(self, name:str):
-        '''Activate all effects with name as attribute name'''
-        fn_list = getattr(self, name, None)
-        if fn_list is not None:
-            for fn in fn_list:
-                fn(self)
-    # override this on things with effects. adding the effect fn to the end of the list
-    # effects should be a function titled the same as the string passed to effect_call() when it is called
-    # returns a list of functions (see effects.py)
-    def gen_effects(self, effs:list) -> list:
-        if effs == []:
-            return None
-        return effs
+    def get_effects(self, effect_class:Effect) -> list[Effect]:
+        '''Activate all effects of type effect_class'''
+        lst = []
+        for e in self.effects:
+            if isinstance(e, effect_class):
+                lst.append(e)
+        return lst
     
-    def remove_effect(self, name:str = None):
-        '''Removes attr by name. not supplying a name will remove all effects'''
-        if name is None:
-            for str in self.effects():
-                delattr(self, str)
-            self.effects.clear()
-            return
-        assert name in self.effects
-        self.effects.remove(name)
-        delattr(self, name)
+    def grant_effect(self, eff):
+        self.effects.append(eff)
 
-    # doesnt do what it says, returns if balance > 0
     def off_balance(self, cost:int = 0) -> bool:
         '''Returns true if entity cannot spent cost in balance'''
         return self.balance <= cost
-    def get_reaction(self):
-        return None
-    def get_parry_class(self):
-        return NotImplementedError
+    
     def can_use_action(self, actn_class) -> True:
         '''Returns True if entity can currently use that action'''
         if self.off_balance(actn_class.bal_use_cost):
@@ -199,8 +173,10 @@ class Action(Viewable):
         return False
 
     def tick(self):
+        import effects
         self.timer -= 1
-        self.src.effect_call('on_tick')
+        for e in self.src.get_effects(effects.on_tick):
+            e(self)
     def resolve_balance(self) -> None:
         '''Consumes the balance for resolving'''
         self.src.balance -= self.bal_resolve_cost
@@ -211,6 +187,7 @@ class Attack(Action):
     All attacks have damage and stagger mods'''
     tgt:Damageable
     acc:int
+    src:Entity
     stagger_mod:float
     dmg_mod:float
     styles:list[str] = []
@@ -233,8 +210,14 @@ class Attack(Action):
         else:
             return False
     def get_dmg(self) -> int:
-        self.src: Enemy
-        return self.src.get_atk_source(self).dmg_base * self.dmg_mod * self.eff
+        import effects
+        base = self.src.get_atk_source(self).dmg_base
+        mod = self.dmg_mod
+        for e in self.src.get_effects(effects.mod_damage):
+            a,m = e(self)
+            base += a
+            mod *= m
+        return base * mod
     def get_stagger(self) -> int:
         return self.src.stagger_base * self.stagger_mod
 
@@ -416,7 +399,7 @@ class Room:
         self.exits.append(
             Exit(room, dir)
         )
-    def rand_choice(self, tuple:tuple) -> object:
+    def rand_choice(self, tuple:tuple) -> Enemy:
         pop, wgts = zip(*tuple)
         return random.choices(pop, weights = wgts)[0]
             

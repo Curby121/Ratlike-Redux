@@ -2,6 +2,7 @@ import baseclasses as bc
 import roomobjects as ro
 import enemies
 import random
+import effects
 random.seed()
 
 class LabyrinthRoom(bc.Room):
@@ -19,7 +20,9 @@ class LabyrinthRoom(bc.Room):
         if len(enemies) == 0:
             es = self.rand_choice(self.encounters)
             for e in es:
-                enemies.append(e())
+                new_e:bc.Enemy = e()
+                new_e.grant_effect(effects.Stregth(1))
+                enemies.append(new_e)
         if centerpiece is None:
             c = self.rand_choice(self.centerpieces)
             if c is not None:

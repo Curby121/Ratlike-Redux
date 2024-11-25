@@ -17,10 +17,9 @@ class Rat(bc.Enemy):
         (actions.Bite, 4),
         (actions.Dodge, 10)
     ]
-    def gen_effects(self, effs: list = []) -> list:
-        e = effects.BalanceHeal()
-        effs.append(e)
-        return super().gen_effects(effs)
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.grant_effect(effects.BalanceHeal(rate = 0.5))
     
 class Goblin(bc.Enemy):
     name = 'Goblin'

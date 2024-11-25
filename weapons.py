@@ -1,5 +1,6 @@
 import baseclasses as bc
 import actions
+import effects
 
 class Dagger(bc.Weapon):
     name = 'Dagger'
