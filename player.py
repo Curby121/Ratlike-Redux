@@ -101,3 +101,9 @@ class Player(bc.Damageable):
 
     def get_atk_source(self, atk) -> float:
         return self.get_weapon_with_attack(atk)
+    
+    def examine_equipment(self) -> str:
+        res = ''
+        for key,value in self.equipment.items():
+            res+=f'{key}: {value.name}\n'
+        return res[:-1]

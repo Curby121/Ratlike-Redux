@@ -279,37 +279,37 @@ class Item(Viewable):
         super().__init__(**kwargs)
         if not hasattr(self, 'value'):
             print(f'{self.name} has no value')
-    def take(self):
-        print(f'take(): {self}')
-
-# Deprecated ? - Currently unused
-class CounterAttack(Action):
-    '''Base class that stores an attack that is performed later'''
-    def __init__(self, reaction:Attack, source: Entity, **kwargs):
-        self.reaction_class = reaction
-        if 'target' in kwargs:
-            kwargs['target'] = None
-        super().__init__(source, **kwargs)
-
-    def react(self, target:Damageable = None):
-        '''Perform the saved action'''
-        if self.reaction_class is not None:
-            rxn = self.reaction_class(source = self.src)
-            if isinstance(rxn, Attack):
-                rxn.tgt = target
-            rxn.resolve(reaction = True)
+    def take(self, room):
+        import game
+        game.plr.inv.append(self)
+        room.floor_items.remove(self)
+    def drop(self, room):
+        room.floor_items.append(self)
+        import game
+        game.plr.inv.remove(self)
+        GUI.log(f'Dropped {self.name}.')
+    def inventory_actions(self) -> tuple[str,]:
+        return []
 
 class Equippable(Item):
     '''Anything that can be worn or held'''
     slot:str = None
-    twohanded:bool = False
-    def equip(self, plr):
+    def equip(self, slot:str = None):
         #TODO: uneqip that slot!
-        plr.equipment[self.slot] = self
-        if self.twohanded:
-            plr.equipment['Secondary'] = None
+        import game
+        if slot is None:
+            slot = self.slot
+        if game.plr.equipment[slot] is not None:
+            game.plr.inv.append(game.plr.equipment[slot])
+        game.plr.equipment[slot] = self
+        if self in game.plr.inv:
+            game.plr.inv.remove(self)
         GUI.log(f'You equipped a {self.name}.')
-
+    def inventory_actions(self) -> list[tuple[str,]]:
+        return [
+            ('Equip',self.equip)
+        ]
+    
 class Weapon(Equippable):
     '''Base class for all weapons.\n
     Weapons must have a style. Paradigm is melee by default'''
@@ -322,6 +322,15 @@ class Weapon(Equippable):
     def get_actions(self) -> list[Attack]:
         # TODO: player talents / abilities
         return self.attacks
+    def inventory_actions(self) -> list[tuple[str,]]:
+        return [
+            ('Primary',self._prim_e),
+            ('Secondary',self._sec_e)
+        ]
+    def _prim_e(self):
+        return self.equip('Primary')
+    def _sec_e(self):
+        return self.equip('Secondary')
 
 class ObjectAction:
     '''Class for interactable actions on objects. It should be noted that 

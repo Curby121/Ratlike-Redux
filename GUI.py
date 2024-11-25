@@ -4,12 +4,12 @@ import asyncio
 import tkinter as tk
 from tkinter import ttk
 
-root = tk.Tk()
-root.title('RatLike Redux')
-root.configure(background = "black")
-root.geometry("1280x720")
-root.rowconfigure(0, weight=1)
-root.columnconfigure(1, weight=1)
+root_win = tk.Tk()
+root_win.title('RatLike Redux')
+root_win.configure(background = "black")
+root_win.geometry("1280x720")
+root_win.rowconfigure(0, weight=1)
+root_win.columnconfigure(1, weight=1)
 
 game = None
 current_frame:ttk.Frame = None
@@ -27,17 +27,41 @@ def log(msg:str):
 class BaseWindow(tk.Canvas):
     '''Contains player stats to the left and log to the right'''
     def __init__(self):
-        super().__init__(root, bg='black')
+        super().__init__(root_win, bg='black')
         self.log = self.Log(self)
         self.log.place(relx=1, rely=0.5, relheight=1, relwidth=0.25, anchor='e')
         global current_log
         current_log = self.log
 
+        self.plr_panel = self.PlrStuff(self)
+        self.plr_panel.place(relx=0, rely=0.5, relheight=1, relwidth=0.25, anchor='w')
+
     def Updt(*args):
-        '''Override in inhereted classes to update indo every frame'''
+        '''Override in inhereted classes to update info every frame'''
         # TODO: add updates
-        pass
     
+    class PlrStuff(tk.Canvas):
+        def __init__(self, root):
+            super().__init__(root, background='black')
+            self.face = ttk.Label(self, text='YourFace.jpg', font=('Arial', 14), padding=5)
+            self.face.place(relx=0.5, rely=0, height=80, relwidth=.9, anchor='n')
+            self.eqp = ttk.Label(self, text='eqp', font=('Times New Roman', 11))
+            import game
+            self.eqp.configure(text=game.plr.examine_equipment())
+            self.eqp.place(relx=0.5, rely=0.2, height=50, relwidth=0.9, anchor='n')
+            self.buttons = self.Buttons(self)
+            self.buttons.place(relx=0.5, rely=0.75, relheight=.2, relwidth=.5, anchor='s')
+
+        class Buttons(tk.Canvas):
+            def __init__(self, root):
+                super().__init__(root)
+                self.inv = tk.Button(self, text='Inventory', command = ViewInventory)
+                self.inv.pack(pady=8)
+                self.inv = tk.Button(self, text='Talents', command = ViewTalents)
+                self.inv.pack(pady=8)
+                self.inv = tk.Button(self, text='Character', command = ViewCharacter)
+                self.inv.pack(pady=8)
+
     class Log(tk.Canvas):
         def __init__(self, root):
             super().__init__(root)
@@ -57,6 +81,65 @@ class BaseWindow(tk.Canvas):
             self.text.pack(side=tk.TOP, fill='both', expand=True)
             self.text.see(tk.END)
             self.text.config(state = tk.DISABLED) # stops from being able to type into
+
+class PopUp(tk.Canvas):
+    def __init__(self):
+        super().__init__(root_win, bg='red')
+        self.Exit = ttk.Button(self, text='X', command=KillPopup)
+        self.Exit.pack(anchor='ne', padx=3, pady=3)
+        self.place(relx=0.5, rely= 0.5, relwidth=0.48, relheight=0.98, anchor='center')
+
+    class List(tk.Canvas):
+        def __init__(self, root):
+            super().__init__(root, background='blue')
+            self.frame = tk.Frame(self, background='green')
+            self.bar = ttk.Scrollbar(self, command=self.yview)
+            self.configure(yscrollcommand = self.bar.set)
+            self.bar.pack(side=tk.RIGHT, fill='y')
+            self.place(relx=0.5, rely= 0.5, relwidth=.9, relheight=.9, anchor='center')
+
+            self.update_idletasks() # updates winfo_width()
+            self.create_window(self.winfo_width()/2, 0, anchor='n', window=self.frame)
+            self.frame.bind("<Configure>", self.modconfig)
+
+        def modconfig(self, event):
+            self.configure(scrollregion=self.frame.bbox('all'), border=3)
+
+class Inv(PopUp):
+    def __init__(self):
+        super().__init__()
+        self.list = PopUp.List(self)
+        import game
+        for i, item in enumerate(game.plr.inv):
+            itemobj = self.Item(self.list.frame, item)
+            itemobj.grid(row=i)
+            self.list.frame.rowconfigure(i, minsize=80)
+
+    def refresh(func, *args):
+        def deco():
+            func(*args)
+            KillPopup()
+            ViewInventory()
+        return deco
+
+    class Item(tk.Canvas):
+        def __init__(self, root:tk.Frame, item):
+            super().__init__(root, background='black')
+            import baseclasses as bc
+            item:bc.Item
+            actns = item.inventory_actions()
+            count = len(actns)
+            for i,a in enumerate(actns):
+                butt = tk.Button(self, text=a[0], font=('Arial', 12), command=Inv.refresh(a[1]))
+                butt.grid(row=0, column=i+1, sticky='e')
+
+            self.name = ttk.Label(self, text=item.name, font=('Arial', 16))
+            self.drop = tk.Button(self, text='Drop', font=('Arial', 12), command=Inv.refresh(item.drop, game.room))
+            self.examine = tk.Button(self, text='Examine', font=('Arial', 12), command=Inv.refresh(item.examine))
+            
+            self.name.grid(row =0, sticky='w')
+            self.examine.grid(row = 0, column=count+1, sticky='e')
+            self.drop.grid(row = 0, column=count+2, sticky='e')
 
 class ObjectBar(tk.Frame):
     objs:list[ttk.Frame] = None
@@ -150,6 +233,9 @@ class RoomWindow(BaseWindow):
             return lambda: fn(game)
 
     class Item(tk.Frame):
+        def take(self):
+            self.item.take(game.room)
+            EnterRoom(game.room)
         def __init__(self, root, item):
             super().__init__(root)
             self.item = item
@@ -161,7 +247,7 @@ class RoomWindow(BaseWindow):
             take_b = ttk.Button(
                 self,
                 text = 'Take',
-                command = self.item.take
+                command = self.take
             )
             examine_b = ttk.Button(
                 self,
@@ -307,8 +393,8 @@ async def run():
     while True:
         if current_frame is not None:
             current_frame.Updt()
-        root.update()
-        root.update_idletasks()
+        root_win.update()
+        root_win.update_idletasks()
         await asyncio.sleep(0)
 
 def EnterRoom(room):
@@ -328,6 +414,23 @@ def EnterCombatRoom(room) -> CombatWindow:
     current_frame = CombatWindow(room.enemies)
     current_frame.place(relwidth=1.0, relheight=1.0)
     return current_frame
+
+pop = None
+def ViewInventory():
+    global pop
+    pop = Inv()
+
+def ViewTalents():
+    print('View Talents')
+
+def ViewCharacter():
+    print('View Character')
+
+def KillPopup():
+    global pop
+    pop.destroy()
+    pop = None
+    EnterRoom(game.room)
 
 def examine_action(action):
     log('')
@@ -350,4 +453,4 @@ def examine_action(action):
 
 def updt_plr_combat(acts, activated:list[bool]):
     assert isinstance(current_frame, CombatWindow)
-    current_frame.ActionBar
+    #current_frame.ActionBar

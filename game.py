@@ -11,23 +11,26 @@ import weapons
 import GUI
 
 plr = None # for access externally
+current_room = None
 
 class Game:
     def __init__(self):
         self.plr = player.Player()
         global plr
         plr = self.plr
-        self.room = None
 
         # for holding execution for when a player descision needs to be made
         self.plr_event = asyncio.Event()
 
         #testing
-        #weapons.Dagger().equip(self.plr)
+        #weapons.Dagger().equip()
 
-        weapons.Sword().equip(self.plr)
-        #weapons.Spear().equip(self.plr)
-        weapons.WoodenShield().equip(self.plr)
+        weapons.Sword().equip()
+        #weapons.Spear().equip()
+        weapons.WoodenShield().equip()
+
+        for i in range(3):
+            self.plr.inv.append(weapons.WoodenShield())
 
     async def Start(self):
         '''Start and run game'''
