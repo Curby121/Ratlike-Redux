@@ -105,5 +105,8 @@ class Player(bc.Damageable):
     def examine_equipment(self) -> str:
         res = ''
         for key,value in self.equipment.items():
-            res+=f'{key}: {value.name}\n'
+            name = 'None'
+            if value is not None:
+                name = value.name
+            res+=f'{key}: {name}\n'
         return res[:-1]
