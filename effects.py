@@ -1,15 +1,18 @@
 '''Effects'''
+from typing import Any
 import baseclasses as bc
 
 class Effect(bc.Viewable):
-    pass
+    def __call__(self, *args, **kwargs) -> Any:
+        return NotImplementedError
 
 class on_tick(Effect):
     '''Called when actions are decremented'''
-    def __call__(self, parent:bc.Action):
+    def __call__(self, parent:bc.Entity):
         return NotImplementedError
     
 class mod_damage(Effect):
+    '''Modifies all damage dealt by the return value -> (add, mult)'''
     def __call__(self, atk:bc.Attack) -> tuple[int, float]:
         return NotImplementedError
 
@@ -28,7 +31,7 @@ class BalanceHeal(on_tick):
         super().__init__(**kwargs)
         self.healed = 0.0
         self.rate = rate
-    def __call__(self, parent:bc.Action):
+    def __call__(self, parent:bc.Entity):
         self.healed += 1
         if self.healed >= 1.0:
             self.healed -= 1

@@ -18,9 +18,6 @@ class Viewable:
     def examine(self):
         GUI.log(f"{self.name}. {self.desc}")
 
-class Effect(Viewable):
-    pass
-
 # might not be useful. All entities so far are damageables
 # TODO:? Merge with damageable, have 'damageable' just as a bool
 class Entity(Viewable):
@@ -33,12 +30,13 @@ class Entity(Viewable):
     bal_rec:int
     move:int
     def __init__(self, **kwargs) -> None:
+        import effects
         self.action_queue:list[Action] = []
-        self.effects:list[Effect] = []
+        self.effects:list[effects.Effect] = []
         super().__init__(**kwargs)
         self.balance = self.bal_max
 
-    def get_effects(self, effect_class:Effect) -> list[Effect]:
+    def get_effects(self, effect_class) -> list:
         '''Activate all effects of type effect_class'''
         lst = []
         for e in self.effects:
@@ -64,7 +62,6 @@ class Entity(Viewable):
         '''On the player this returns the weapon, on enemies it returns the enemy'''
         raise NotImplementedError
 
-#TODO: deprecate and remove
 class Damageable(Entity):
     '''Base Class for all entities capable of taking damage\n
     ALL damageables must be initialized with a max_hp stat'''
@@ -92,7 +89,6 @@ class Damageable(Entity):
             raise ValueError
         dmg = int(atk.get_dmg() * dmg_mod)
         stagger = int(atk.get_stagger() * stagger_mod)
-        #print(f'attack_me stgr: {stagger} = {atk.get_stagger()} * {stagger_mod}')
         self._take_damage(dmg, stagger)
         
     def _take_damage(self, dmg:int, stgr:int):
@@ -105,7 +101,6 @@ class Damageable(Entity):
 
     def new_turn(self):
         '''Reset bookkeeping for next turn, also kills actions if at 0 balance'''
-        #self.balance = min(self.bal_max, self.balance + self.bal_rec)
         self.balance = min(self.bal_max, self.balance)
         self.balance = max(0, self.balance)
         if self.balance == 0:

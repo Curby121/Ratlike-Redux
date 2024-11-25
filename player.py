@@ -15,7 +15,7 @@ class Player(bc.Damageable):
         }
         super().__init__(**plr)
         self.coins = 0
-        self.inv = []
+        self.inv:list[bc.Item] = []
         self.equipment:dict[str, bc.Equippable] = {
             'Primary': None,
             'Secondary': None
@@ -58,12 +58,6 @@ class Player(bc.Damageable):
                     return predicate(eq)
         return None
 
-    def get_reaction(self) -> bc.CounterAttack:
-        return self.get_first_from_eqps(lambda x: x.dodge_class)
-        
-    def get_parry_class(self) -> bc.Attack:
-        return self.get_first_from_eqps(lambda x: x.parry_class)
-
     def get_combat_actions(self) -> list[bc.Action]:
         acts = []
         for key, val in self.equipment.items():
@@ -97,14 +91,11 @@ class Player(bc.Damageable):
             return atk
 
     def get_dmg(self, atk:bc.Attack) -> float:
-        # TODO: modifiers
         for key, wep in self.equipment.items():
             if wep is not None:
                 for a in wep.get_actions():
                     if isinstance(atk, a):
                         return wep.dmg_base
-                if isinstance(atk, wep.dodge_class):
-                    return wep.dmg_base
         else:
             raise Exception('Atk not found in eqp')
 
