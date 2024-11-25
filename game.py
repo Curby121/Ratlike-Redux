@@ -27,10 +27,7 @@ class Game:
 
         weapons.Sword().equip()
         #weapons.Spear().equip()
-        weapons.WoodenShield().equip()
-
-        for i in range(3):
-            self.plr.inv.append(weapons.WoodenShield())
+        #weapons.WoodenShield().equip()
 
     async def Start(self):
         '''Start and run game'''

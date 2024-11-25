@@ -10,7 +10,7 @@ class LabyrinthRoom(bc.Room):
         ([enemies.Rat], 50),
         ([enemies.Goblin], 30),
         ([enemies.Skeleton], 15),
-        ([], 99990)
+        ([], 90)
     ]
     centerpieces = [
         (ro.Chest, 15),
