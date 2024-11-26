@@ -35,7 +35,7 @@ class Slash(bc.Attack):
 
 class Chop(bc.Attack):
     name = 'Chop'
-    desc = '''A targeted swing will hurt more, but leaves its user more vulnerable'''
+    desc = '''A targeted swing will hurt, but leaves its user ssomewhat vulnerable'''
     use_msg = 'chops!'
     timer = 5
     dmg_mod = 1.0
@@ -83,7 +83,7 @@ class Smash(bc.Attack):
     timer = 7
     dmg_mod = 1.0
     stagger_mod = 2.0
-    acc = 8
+    acc = 12
     parry_mod = 0
     bal_use_cost = 5
     bal_resolve_cost = -2
@@ -93,13 +93,14 @@ class DaggerStab(bc.Attack):
     '''Signature finisher for daggers.'''
     name = 'Sink Blade'
     desc = 'A lethal stab'
-    use_msg = 'throws their dagger forwards'
-    dmg_mod = 1.2
-    parry_mod = 0
+    use_msg = 'throws their dagger forwards!'
+    timer = 4
     acc = 3
-    stagger_mod = 0.1
-    reach = 3
-    exh_cost = 10
+    dmg_mod = 2.0
+    parry_mod = 0
+    stagger_mod = 0
+    bal_use_cost = 3
+    bal_resolve_cost = -1
 
 class Bite(bc.Attack):
     name = 'Bite'

@@ -10,7 +10,7 @@ import player
 import weapons
 import GUI
 
-plr = None # for access externally
+plr:player.Player = None # for access externally
 current_room = None
 
 class Game:
@@ -23,15 +23,14 @@ class Game:
         self.plr_event = asyncio.Event()
 
         #testing
-        #weapons.Dagger().
-
-        #weapons.Sword()._prim_e()
+        weapons.Sword()._prim_e()
         #weapons.Spear()._prim_e()
-        weapons.Mace()._prim_e()
+        #weapons.Mace()._prim_e()
 
         weapons.WoodenShield()._sec_e()
+        #weapons.Dagger()._sec_e()
 
-        for i in range(4): plr.inv.append(weapons.WoodenShield())
+        #for i in range(4): plr.inv.append(weapons.WoodenShield())
 
     async def Start(self):
         '''Start and run game'''
@@ -55,7 +54,7 @@ class Game:
     async def StartCombat(self, room:bc.Room):
         plr.generate_effects() # create all player effects from equipment
         self.plr.balance = self.plr.bal_max
-        
+
         GUI.EnterCombatRoom(room)
 
         while len(room.enemies) > 0:

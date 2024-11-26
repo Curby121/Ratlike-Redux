@@ -26,7 +26,7 @@ class Sword(bc.Weapon):
 
 class Spear(bc.Weapon):
     name = 'Wooden Spear'
-    desc = 'A long wooden sshaft with a sharp piece of iron lashed on top.'
+    desc = 'A long wooden shaft with a sharp piece of iron lashed on top.'
     dmg_base = 5
     twohanded = True
     value = 15

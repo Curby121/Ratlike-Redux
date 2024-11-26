@@ -21,7 +21,6 @@ class LabyrinthRoom(bc.Room):
             es = self.rand_choice(self.encounters)
             for e in es:
                 new_e:bc.Enemy = e()
-                new_e.grant_effect(effects.Stregth(1))
                 enemies.append(new_e)
         if centerpiece is None:
             c = self.rand_choice(self.centerpieces)

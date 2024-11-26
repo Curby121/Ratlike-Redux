@@ -18,11 +18,18 @@ class mod_damage(Effect):
         return NotImplementedError
 
 class Stregth(mod_damage):
+    '''Strength increases damage dealt by 1, double as effective on heavy attacks'''
     name = 'Strength'
     desc = 'Deals bonus damage!'
     def __init__(self, strength:int = 1) -> None:
         self.value = strength
     def __call__(self, atk: bc.Attack) -> tuple[int, float]:
+        if 'heavy' in atk.styles:
+            print('strength x2')
+            return self.value *2, 1.0
+        elif 'quick' in atk.styles:
+            print('no str bonus on quick attacks')
+            return 0, 1.0
         return self.value, 1.0
 
 class BalanceHeal(on_tick):

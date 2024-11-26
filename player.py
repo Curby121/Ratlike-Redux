@@ -22,35 +22,6 @@ class Player(bc.Damageable):
         }
         self.action:bc.Action = None
 
-    def take_turn(self, enemies:list[bc.Enemy]) -> bc.Attack:
-        '''For testing with CLI only, this will need to be redone once GUI
-        is implemented'''
-        print('\n   Enemies:')
-        for e in enemies:
-            print(f' {e.name}: {e.hp}/{e.max_hp}  {e.balance}/{e.bal_max}')
-        
-        print(f'\n You: {self.hp}/{self.max_hp}  {self.balance}/{self.bal_max}')
-
-        acts = self.get_combat_actions()
-        msg = ''
-        for i,a in enumerate(acts):
-            msg += f'{i}:{a.name}, '
-        msg = msg[:-2]
-        print(f'Actions: {msg}')
-        action_class = None
-        while action_class is None:
-            i = input('->')
-            if i == '': i = 0
-            try:
-                action_class = acts[int(i)]
-            except Exception as e:
-                print(f'[Err] {e}')
-
-        if self.balance >= self.bal_max:
-            action_class = actions.Pause
-        print(f'Chose: {action_class.name}')
-        return super().take_turn(action_class, target = enemies[0])
-
     def get_first_from_eqps(self, predicate) -> bc.Equippable:
         for slot, eq in self.equipment.items():
             if eq is not None:
@@ -84,8 +55,6 @@ class Player(bc.Damageable):
                 for a in wep.get_actions():
                     if isinstance(atk, a):
                         return wep
-                if isinstance(atk, wep.dodge_class):
-                    return wep
         else:
             print('Atk not found in eqp')
             return atk
