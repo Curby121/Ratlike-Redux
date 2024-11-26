@@ -53,17 +53,17 @@ class BaseWindow(tk.Canvas):
             self.eqp.configure(text=game.plr.examine_equipment())
             self.eqp.place(relx=0.5, rely=0.2, height=50, relwidth=0.9, anchor='n')
             self.buttons = self.Buttons(self)
-            self.buttons.place(relx=0.5, rely=0.75, relheight=.2, relwidth=.5, anchor='s')
+            self.buttons.place(relx=0.5, rely=0.75, anchor='s')
 
         class Buttons(tk.Canvas):
             def __init__(self, root):
                 super().__init__(root)
                 self.inv = tk.Button(self, text='Inventory', command = ViewInventory)
-                self.inv.pack(pady=8)
-                self.inv = tk.Button(self, text='Talents', command = ViewTalents)
-                self.inv.pack(pady=8)
-                self.inv = tk.Button(self, text='Character', command = ViewCharacter)
-                self.inv.pack(pady=8)
+                self.inv.pack(pady=8, padx=8)
+                self.talents = tk.Button(self, text='Talents', command = ViewTalents)
+                self.talents.pack(pady=8, padx=8)
+                self.char = tk.Button(self, text='Character', command = ViewCharacter)
+                self.char.pack(pady=8, padx=8)
 
     class Log(tk.Canvas):
         def __init__(self, root):
@@ -118,6 +118,7 @@ class Inv(PopUp):
             itemobj.grid(row=i)
             self.list.frame.rowconfigure(i, minsize=80)
 
+    # decorator for functions that change the inventory state
     def refresh(func, *args):
         def deco():
             func(*args)
@@ -129,7 +130,7 @@ class Inv(PopUp):
         def __init__(self, root:tk.Frame, item):
             super().__init__(root, background='black')
             import baseclasses as bc
-            item:bc.Item
+            self.item:bc.Item = item
             actns = item.inventory_actions()
             count = len(actns)
             for i,a in enumerate(actns):
@@ -138,11 +139,14 @@ class Inv(PopUp):
 
             self.name = ttk.Label(self, text=item.name, font=('Arial', 16))
             self.drop = tk.Button(self, text='Drop', font=('Arial', 12), command=Inv.refresh(item.drop, game.room))
-            self.examine = tk.Button(self, text='Examine', font=('Arial', 12), command=Inv.refresh(item.examine))
+            self.examine = tk.Button(self, text='Examine', font=('Arial', 12), command=self.examineitem)
             
             self.name.grid(row =0, sticky='w')
             self.examine.grid(row = 0, column=count+1, sticky='e')
             self.drop.grid(row = 0, column=count+2, sticky='e')
+
+        def examineitem(self):
+            log(self.item.examine())
 
 class ObjectBar(tk.Frame):
     objs:list[ttk.Frame] = None
@@ -339,7 +343,7 @@ class CombatWindow(BaseWindow):
             self.bal_L.configure(text = f'Bal: {self.enemy.balance}/{self.enemy.bal_max}')
             
         def examine(self):
-            log(self.enemy.desc)
+            log(self.enemy.examine())
 
     class ActionLabel(ttk.Frame):
         def __init__(self, root):
@@ -441,10 +445,11 @@ def ViewInventory():
     pop = Inv()
 
 def ViewTalents():
-    print('View Talents')
+    log('Talents are to be added in future')
 
 def ViewCharacter():
-    print('View Character')
+    import game
+    return log(game.plr.examine())
 
 def KillPopup():
     global pop

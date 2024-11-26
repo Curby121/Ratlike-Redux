@@ -2,6 +2,7 @@
 from typing import Any
 import baseclasses as bc
 
+# TODO: proper effect examine
 class Effect(bc.Viewable):
     def __call__(self, *args, **kwargs) -> Any:
         return NotImplementedError

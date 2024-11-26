@@ -90,6 +90,13 @@ class Player(bc.Damageable):
             print('Atk not found in eqp')
             return atk
 
+    def generate_effects(self):
+        self.effects.clear()
+        for slot, item in self.equipment.items():
+            try:
+                self.effects.extend(item.effects)
+            except AttributeError: pass
+
     def get_dmg(self, atk:bc.Attack) -> float:
         for key, wep in self.equipment.items():
             if wep is not None:

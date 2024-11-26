@@ -53,8 +53,10 @@ class Game:
             GUI.EnterRoom(self.room)
 
     async def StartCombat(self, room:bc.Room):
-        GUI.EnterCombatRoom(room)
+        plr.generate_effects() # create all player effects from equipment
         self.plr.balance = self.plr.bal_max
+        
+        GUI.EnterCombatRoom(room)
 
         while len(room.enemies) > 0:
             # update gui

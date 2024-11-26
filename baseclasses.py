@@ -15,8 +15,8 @@ class Viewable:
     def __init__(self, **kwargs) -> None:
         for key, val in kwargs.items():
             setattr(self, key, val)
-    def examine(self):
-        GUI.log(f"{self.name}. {self.desc}")
+    def examine(self) -> str:
+        return f"{self.name}. {self.desc}"
 
 # might not be useful. All entities so far are damageables
 # TODO:? Merge with damageable, have 'damageable' just as a bool
@@ -37,13 +37,13 @@ class Entity(Viewable):
         self.balance = self.bal_max
 
     def get_effects(self, effect_class) -> list:
-        '''Activate all effects of type effect_class'''
+        '''Returns a list of all effects of type effect_class'''
         lst = []
         for e in self.effects:
             if isinstance(e, effect_class):
                 lst.append(e)
         return lst
-    
+
     def grant_effect(self, eff):
         self.effects.append(eff)
 
@@ -56,6 +56,14 @@ class Entity(Viewable):
         if self.off_balance(actn_class.bal_use_cost):
             return False
         return True
+    def examine(self) -> None:
+        res = super().examine()
+        if len(self.effects) != 0:
+            res+='\n  Effects:\n'
+            for e in self.effects:
+                res += e.examine()
+                res += '\n'
+        return res[:-1]
     def take_turn(self):
         raise Exception(f'No turn defined for {self.name}')
     def get_atk_source(self, *args):
@@ -294,6 +302,7 @@ class Item(Viewable):
 class Equippable(Item):
     '''Anything that can be worn or held'''
     slot:str = None
+    effects:list
     def equip(self, slot:str = None):
         #TODO: uneqip that slot!
         import game
