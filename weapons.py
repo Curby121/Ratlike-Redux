@@ -5,7 +5,6 @@ import effects
 class Dagger(bc.Weapon):
     name = 'Dagger'
     desc = 'Stick em with the pointy end!'
-    slot = 'Primary'
     value = 5
     dmg_base = 5
     parry = 4
@@ -13,13 +12,10 @@ class Dagger(bc.Weapon):
         actions.Stab,
         actions.DaggerStab
     ]
-    parry_class = actions.Stab
-    dodge_class = actions.Stab
 
 class Sword(bc.Weapon):
     name = 'Iron Sword'
     desc = 'Swordsman\'s best friend.'
-    slot = 'Primary'
     value = 15
     dmg_base = 5
     parry = 8
@@ -27,26 +23,34 @@ class Sword(bc.Weapon):
         actions.Slash,
         actions.Chop
     ]
-    parry_class = actions.Slash
 
 class Spear(bc.Weapon):
     name = 'Wooden Spear'
     desc = 'A long wooden sshaft with a sharp piece of iron lashed on top.'
-    slot = 'Primary'
     dmg_base = 5
     twohanded = True
     value = 15
-    parry_mod = 0.5
+    parry = 5
     attacks = [
         actions.Lunge,
         actions.Stab
     ]
-    parry_class = actions.Stab
+
+class Mace(bc.Weapon):
+    name = 'Mace'
+    desc = 'A lethal ball on the end of a sturdy handle.'
+    value = 15
+    dmg_base = 8
+    parry = 4
+    attacks = [
+        actions.Chop,
+        actions.Smash
+    ]
+
 
 class WoodenShield(bc.Weapon):
     name = 'Wooden Shield'
     desc = 'A small round wooden shield.'
-    slot = 'Secondary'
     value = 50
     parry_mod = 1.5
     attacks = [

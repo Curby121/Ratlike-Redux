@@ -23,19 +23,23 @@ class Game:
         self.plr_event = asyncio.Event()
 
         #testing
-        #weapons.Dagger().equip()
+        #weapons.Dagger().
 
-        weapons.Sword().equip()
-        #weapons.Spear().equip()
-        #weapons.WoodenShield().equip()
+        #weapons.Sword()._prim_e()
+        #weapons.Spear()._prim_e()
+        weapons.Mace()._prim_e()
+
+        weapons.WoodenShield()._sec_e()
+
+        for i in range(4): plr.inv.append(weapons.WoodenShield())
 
     async def Start(self):
         '''Start and run game'''
         GUI.init(self)
         t1 = asyncio.create_task( GUI.run() )
 
-        room = rooms.LabyrinthRoom()
-        room.enter(self)
+        self.room = rooms.LabyrinthRoom()
+        self.room.enter(self)
 
         while True:
             await self.EnterRoom()
@@ -49,13 +53,12 @@ class Game:
             GUI.EnterRoom(self.room)
 
     async def StartCombat(self, room:bc.Room):
-        cmbtwindow = GUI.EnterCombatRoom(room)
+        GUI.EnterCombatRoom(room)
         self.plr.balance = self.plr.bal_max
 
         while len(room.enemies) > 0:
             # update gui
-            p_acts = self.plr.get_combat_actions()
-            cmbtwindow.make_plr_actions(p_acts, self.plr.get_availables(p_acts))
+            update_gui()
 
             # TODO: initiative, currently player always has
 
@@ -155,13 +158,14 @@ class Game:
         print('on_object_action')
 
     def try_move_room(self, room:bc.Room):
+        print(f'enter room: {room} with floor: {room.floor_items}')
         self.room = room
         self.plr_event.set()
 
     # TODO: remove this and find a clever way to do it in GUI, the flashing sucks
     def _reload_room(self):
         '''Called to refresh the GUI'''
-        return self.try_move_room(self.room)
+        return GUI.current_frame.Refresh()
     
 # DEPRECATED -> TODO: remove
 def sort_actions(plr_action:bc.Action, actions:list[bc.Action]) -> list[bc.Action]:
@@ -185,3 +189,7 @@ def sort_actions(plr_action:bc.Action, actions:list[bc.Action]) -> list[bc.Actio
 
     a_sorted.extend(non_atks)
     return a_sorted
+
+def update_gui():
+    p_acts = plr.get_combat_actions()
+    GUI.current_frame.make_plr_actions(p_acts, plr.get_availables(p_acts))

@@ -12,7 +12,6 @@ root_win.rowconfigure(0, weight=1)
 root_win.columnconfigure(1, weight=1)
 
 game = None
-current_frame:ttk.Frame = None
 current_log = None
 log_msgs:list[str] = []
 
@@ -39,6 +38,10 @@ class BaseWindow(tk.Canvas):
     def Updt(*args):
         '''Override in inhereted classes to update info every frame'''
         # TODO: add updates
+
+    def Refresh(*args):
+        '''Re fetch data to check for game state changes.'''
+        pass
     
     class PlrStuff(tk.Canvas):
         def __init__(self, root):
@@ -154,32 +157,43 @@ class RoomWindow(BaseWindow):
     '''Dungeon Room view. Rooms can contain a centerpiece, exits, and ground objects'''
     def __init__(self, room):
         super().__init__()
+        self.room = room
+        self.Refresh()
+
+    def Refresh(self):
         exits:list = []
-        centerpiece = room.centerpiece
+        self.centerpiece = self.room.centerpiece
         grounds = []
 
         exit_canvas = tk.Frame(bg='black')
-        ground_bar = ObjectBar(self)
-
-        for e in room.exits:
+        try:
+            self.ground_bar.destroy()
+        except Exception as e:
+            pass
+        self.ground_bar = ObjectBar(self)
+        for e in self.room.exits:
             exits.append(self.Exit(exit_canvas, e))
-        for obj in room.floor_objects:
-            grounds.append(self.Object(ground_bar, obj))
-        for item in room.floor_items:
-            grounds.append(self.Item(ground_bar, item))
+        for obj in self.room.floor_objects:
+            grounds.append(self.Object(self.ground_bar, obj))
+        for item in self.room.floor_items:
+            grounds.append(self.Item(self.ground_bar, item))
 
-        if centerpiece is not None:
-            centerpiece_lab = self.Object(self, centerpiece)
-            centerpiece_lab.lab.config(font = ('Arial', 24), padding=10)
-            centerpiece_lab.place(relx=0.5,rely=0.5, anchor = 'center')
+        if self.centerpiece is not None:
+            try:
+                self.centerpiece_lab.destroy()
+            except Exception as e:
+                pass
+            self.centerpiece_lab = self.Object(self, self.centerpiece)
+            self.centerpiece_lab.lab.config(font = ('Arial', 24), padding=10)
+            self.centerpiece_lab.place(relx=0.5,rely=0.5, anchor = 'center')
 
         if len(exits) > 0:
             exit_canvas.place(relx=0.5, rely=0.05, anchor='n')
             for e in exits:
                 e.grid(row=e.pos[1], column=e.pos[0])
         if len(grounds) > 0:
-            ground_bar.set_frames(grounds)
-            ground_bar.place(relx=0.5,rely=0.95, anchor='s')
+            self.ground_bar.set_frames(grounds)
+            self.ground_bar.place(relx=0.5,rely=0.95, anchor='s')
 
     class Exit(tk.Frame):
         def __init__(self, root, exit):
@@ -234,8 +248,9 @@ class RoomWindow(BaseWindow):
 
     class Item(tk.Frame):
         def take(self):
+            print(f'take room: {game.room}')
             self.item.take(game.room)
-            EnterRoom(game.room)
+            current_frame.Refresh()
         def __init__(self, root, item):
             super().__init__(root)
             self.item = item
@@ -258,7 +273,8 @@ class RoomWindow(BaseWindow):
             take_b.grid(row = 1, column = 0)
             examine_b.grid(row = 2, column = 0)
 
-# TODO: currently only first enemy is displayed
+current_frame:RoomWindow = None
+
 class CombatWindow(BaseWindow):
     def __init__(self, enemies:list):
         super().__init__()
@@ -284,6 +300,10 @@ class CombatWindow(BaseWindow):
         self.enemy_stats.update()
         self.enemy_actn.update(game.get_enemy_action())
         self.player_actn.update(game.get_player_action())
+
+    def Refresh(self):
+        p_acts = game.plr.get_combat_actions()
+        self.make_plr_actions(p_acts, game.plr.get_availables(p_acts))
     
     class PlrStats(ttk.Frame):
         def __init__(self, root):
@@ -402,7 +422,7 @@ def EnterRoom(room):
     if current_frame is not None:
         current_frame.destroy()
     if len(room.enemies) != 0:
-        raise Exception('Use EnterCombatRoom() for enemies')
+        EnterCombatRoom(room)
     else:
         current_frame = RoomWindow(room)
     current_frame.place(relwidth=1.0, relheight=1.0)
@@ -430,7 +450,7 @@ def KillPopup():
     global pop
     pop.destroy()
     pop = None
-    EnterRoom(game.room)
+    current_frame.Refresh()
 
 def examine_action(action):
     log('')
