@@ -7,6 +7,7 @@ class Player(bc.Damageable):
     dmg_base = 5
     stagger_base = 3
     move = 1
+    defense = 5
     def __init__(self):
         plr = {
             'max_hp': 35,
@@ -18,7 +19,8 @@ class Player(bc.Damageable):
         self.inv:list[bc.Item] = []
         self.equipment:dict[str, bc.Equippable] = {
             'Primary': None,
-            'Secondary': None
+            'Secondary': None,
+            'Hand': None
         }
         self.action:bc.Action = None
 
@@ -74,6 +76,12 @@ class Player(bc.Damageable):
                         return wep.dmg_base
         else:
             raise Exception('Atk not found in eqp')
+
+    def get_def(self) -> int:
+        res = self.defense
+        for slot, item in self.equipment.items():
+            res += item.defense
+        return res
 
     def get_atk_source(self, atk) -> float:
         return self.get_weapon_with_attack(atk)

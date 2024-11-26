@@ -28,7 +28,7 @@ class Slash(bc.Attack):
     use_msg = 'slashes.'
     dmg_mod = 0.75
     stagger_mod = 0.5
-    acc = 5
+    acc = 8
     bal_use_cost = 1
     bal_resolve_cost = -1
     reach = 5
@@ -40,7 +40,7 @@ class Chop(bc.Attack):
     timer = 5
     dmg_mod = 1.0
     stagger_mod = 1.0
-    acc = 7
+    acc = 14
     parry_mod = 0.5
     bal_use_cost = 2
     bal_resolve_cost = -1
@@ -56,7 +56,7 @@ class Stab(bc.Attack):
     bal_resolve_cost = -1
     dmg_mod = 1
     parry_mod = 0.5
-    acc = 7
+    acc = 14
     stagger_mod = 0.5
     reach = 3
     styles = ['quick']
@@ -71,7 +71,7 @@ class Lunge(bc.Attack):
     timer = 6
     bal_use_cost = 1
     bal_resolve_cost = 2
-    acc = 11
+    acc = 22
     parry_mod = 0.5
     stagger_mod = 1.5
     
@@ -83,7 +83,7 @@ class Smash(bc.Attack):
     timer = 7
     dmg_mod = 1.0
     stagger_mod = 2.0
-    acc = 12
+    acc = 24
     parry_mod = 0
     bal_use_cost = 5
     bal_resolve_cost = -2
@@ -95,7 +95,7 @@ class DaggerStab(bc.Attack):
     desc = 'A lethal stab'
     use_msg = 'throws their dagger forwards!'
     timer = 4
-    acc = 3
+    acc = 6
     dmg_mod = 2.0
     parry_mod = 0
     stagger_mod = 0
@@ -109,13 +109,8 @@ class Bite(bc.Attack):
     timer = 3
     dmg_mod = 0.5
     parry_mod = 1
-    acc = 10
+    acc = 18
     stagger_mod = 0.5
-
-class RatJump(bc.Attack):
-    name = 'Leap'
-    desc = 'Munch'
-    use_msg = 'leapt forward'
 
 class Dodge(bc.Channel):
     '''Standard Dodge action. Checks for a reaction_class on it\'s source.'''

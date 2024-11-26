@@ -17,6 +17,11 @@ class mod_damage(Effect):
     def __call__(self, atk:bc.Attack) -> tuple[int, float]:
         return NotImplementedError
 
+class mod_accuracy(Effect):
+    '''Modifies accuracy by the return value -> (add, mult)'''
+    def __call__(self, atk:bc.Attack) -> tuple[int, float]:
+        return NotImplementedError
+
 class Stregth(mod_damage):
     '''Strength increases damage dealt by 1, double as effective on heavy attacks'''
     name = 'Strength'
@@ -31,6 +36,15 @@ class Stregth(mod_damage):
             print('no str bonus on quick attacks')
             return 0, 1.0
         return self.value, 1.0
+
+class Accuracy(mod_accuracy):
+    '''Increases accuracy by flat number'''
+    name = 'Accuracy'
+    desc = 'Attacks find their mark more often'
+    def __init__(self, acc_buff:int = 1.5) -> None:
+        self.value = acc_buff
+    def __call__(self, atk: bc.Attack) -> tuple[int, float]:
+        return 0, self.value
 
 class BalanceHeal(on_tick):
     name = 'Balance Gain'

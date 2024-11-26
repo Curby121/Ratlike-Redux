@@ -12,6 +12,7 @@ class Rat(bc.Enemy):
     dmg_base = 5
     stagger_base = 1
     parry = 1
+    defense = 2
     strategy_class = st.Basic
     actions = [
         (actions.Bite, 4),
@@ -29,6 +30,7 @@ class Goblin(bc.Enemy):
     dmg_base = 3
     stagger_base = 4
     parry = 3
+    defense = 4
     parry_class = actions.Stab
     strategy_class = st.Basic
     actions = [

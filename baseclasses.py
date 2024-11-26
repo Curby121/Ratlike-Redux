@@ -69,6 +69,8 @@ class Entity(Viewable):
     def get_atk_source(self, *args):
         '''On the player this returns the weapon, on enemies it returns the enemy'''
         raise NotImplementedError
+    def get_def(self) -> int:
+        raise NotImplementedError
 
 class Damageable(Entity):
     '''Base Class for all entities capable of taking damage\n
@@ -168,7 +170,7 @@ class Action(Viewable):
         '''Check if an attack is deflected by this actions source'''
         if off_roll is None:
             off_roll = atk._roll_offense()
-        def_max = 2
+        def_max = self.src.get_def()
         def_roll = random.randint(1, def_max +1)
         print(f'{self.src.name}\'s {self.name} def: {def_roll}/{def_max+1}')
         if def_roll >= off_roll:
@@ -227,7 +229,15 @@ class Attack(Action):
     def _roll_offense(self) -> int:
         '''Roll this attacks offense'''
         off_mod = (self.src.balance / self.src.bal_max) * self.acc_base
-        off_max = int(self.acc * (self.acc_base + off_mod))
+        off_base = self.acc
+
+        import effects
+        for e in self.src.get_effects(effects.mod_accuracy):
+            a,m = e(self)
+            off_base += a
+            off_mod *= m
+
+        off_max = int(off_base * (self.acc_base + off_mod))
         roll = random.randint(1, off_max + 1)
         print(f'{self.src.name}\'s {self.name} atk: {roll}/{off_max+1}  x{off_mod+self.acc_base}')
         return roll
@@ -257,7 +267,7 @@ class Enemy(Damageable):
     weights:list[int]
     parry:int = 4
     strategy_class:Strategy
-    parry_class:Attack
+    defense:int = 5
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -270,15 +280,10 @@ class Enemy(Damageable):
         if isinstance(new_action, Attack):
             new_action.tgt = player
         self.action_queue.append(new_action)
-    def get_parry_class(self):
-        return self.parry_class
     def get_atk_source(self, *args):
         return self
-    # deprecated
-    def getset_distance(self, set = None) -> int:
-        if set is not None:
-            self.distance = set
-        return self.distance
+    def get_def(self) -> int:
+        return self.defense
 
 class Item(Viewable):
     '''Base Class for entities that can be placed in players inventory\n
@@ -303,6 +308,7 @@ class Equippable(Item):
     '''Anything that can be worn or held'''
     slot:str = None
     effects:list
+    defense:int = 0
     def equip(self, slot:str = None):
         #TODO: uneqip that slot!
         import game
@@ -318,6 +324,8 @@ class Equippable(Item):
         return [
             ('Equip',self.equip)
         ]
+    def get_actions(self) -> list[Attack]:
+        return []
     
 class Weapon(Equippable):
     '''Base class for all weapons.\n

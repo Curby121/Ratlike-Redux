@@ -9,6 +9,7 @@ import rooms
 import player
 import weapons
 import GUI
+import items
 
 plr:player.Player = None # for access externally
 current_room = None
@@ -29,6 +30,8 @@ class Game:
 
         weapons.WoodenShield()._sec_e()
         #weapons.Dagger()._sec_e()
+
+        #items.Ring(gem_class=items.Opal).equip()
 
         #for i in range(4): plr.inv.append(weapons.WoodenShield())
 
