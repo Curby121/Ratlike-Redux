@@ -400,20 +400,22 @@ class Room:
         'w' : 'e'
     }
     def __init__(self,
-                 conn_rooms:dict[str,] = {}, # e.g. 'n' : room obj
-                 enemies:list[Enemy] = [],
+                 conn_rooms:dict[str,] = None, # e.g. 'n' : room obj
+                 enemies:list[Enemy] = None,
                  centerpiece:RoomObject = None
                  ):
         self.exits:list[Exit] = []
         self.floor_objects:list[RoomObject] = []
         self.floor_items:list[Item] = []
         self.enemies = enemies
+        if self.enemies is None:
+            self.enemies = []
         self.centerpiece = centerpiece
-        assert isinstance(conn_rooms, dict)
         self.conn_rooms = conn_rooms
-        if self.conn_rooms is not None:
-            for key,val in conn_rooms.items():
-                self.add_exit(key, val)
+        if self.conn_rooms is None:
+            self.conn_rooms = {}
+        for key,val in self.conn_rooms.items():
+            self.add_exit(key, val)
 
     def add_exit(self, dir:str, room):
         '''Creates an exit object and sets it to a direction.\n
@@ -436,9 +438,9 @@ class Room:
             return self.floor_items.append(obj)
         else:
             raise TypeError(obj)
-    
-    def enter(self, game):
-        game.try_move_room(self)
+        
+    def on_enter(self):
+        raise NotImplementedError
 
 class Dungeon:
     '''Base class'''

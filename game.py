@@ -12,7 +12,7 @@ import GUI
 import items
 
 plr:player.Player = None # for access externally
-current_room = None
+current_room:bc.Room = None
 
 class Game:
     def __init__(self):
@@ -22,6 +22,7 @@ class Game:
 
         # for holding execution for when a player decision needs to be made
         self.plr_event = asyncio.Event()
+        self.room_event = asyncio.Event()
 
         GUI.log('Welcome to Rat Game!\n'+
                 'The game is over when your hp reaches 0. Choose actions carefully! Actions are mediated by '+
@@ -30,12 +31,12 @@ class Game:
                 )
 
         #testing
-        weapons.Sword()._prim_e()
+        #weapons.Sword()._prim_e()
         #weapons.Spear()._prim_e()
         #weapons.Mace()._prim_e()
 
-        weapons.WoodenShield()._sec_e()
-        #weapons.Dagger()._sec_e()
+        #weapons.WoodenShield()._sec_e()
+        weapons.Dagger()._sec_e()
 
         #items.Ring(gem_class=items.Opal).equip()
 
@@ -48,25 +49,30 @@ class Game:
         GUI.init(self)
         t1 = asyncio.create_task( GUI.run() )
 
-        self.room = rooms.LabyrinthRoom()
-        self.room.enter(self)
-
+        new_room = rooms.LabyrinthRoom()
+        self.EnterRoom(new_room)
         while True:
-            await self.EnterRoom()
-            await self.plr_event.wait()
-            self.plr_event.clear()
+            self.room_event.clear()
+            await self._switch_rooms(current_room)
+            await self.room_event.wait()
 
-    async def EnterRoom(self):
-        if len(self.room.enemies) != 0:
-            await self.StartCombat(self.room)
-        else:
-            GUI.EnterRoom(self.room)
+    async def _switch_rooms(self, room:bc.Room):
+        GUI.EnterRoom(room)
+        if len(room.enemies) != 0:
+            await self.StartCombat(room)
+
+    def EnterRoom(self, room:bc.Room):
+        print(f'enter room: {room} with floor: {room.floor_items}')
+        room.on_enter()
+        global current_room
+        current_room = room
+        self.plr_event.clear()
+        self.room_event.set()
+
 
     async def StartCombat(self, room:bc.Room):
         plr.generate_effects() # create all player effects from equipment
         self.plr.balance = self.plr.bal_max
-
-        GUI.EnterCombatRoom(room)
 
         while len(room.enemies) > 0:
             # update gui
@@ -81,34 +87,37 @@ class Game:
                     self.select_player_action(actn.Pause)
                     GUI.log('YOU LOSE YOUR BALANCE!\n')
                     await asyncio.sleep(1)
+                print('plr a')
                 await self.plr_event.wait() # wait for plr input
                 await asyncio.sleep(.4)
 
             # GET ENEMY ACTION IF NONE
-            if len(self.room.enemies[0].action_queue) == 0:
-                self.room.enemies[0].take_turn(self.plr)
-                if not isinstance(self.room.enemies[0].action_queue[0], actn.Pause):
+            print('before')
+            if len(current_room.enemies[0].action_queue) == 0:
+                print('after')
+                current_room.enemies[0].take_turn(self.plr)
+                if not isinstance(current_room.enemies[0].action_queue[0], actn.Pause):
                     await asyncio.sleep(.8)
 
             # increment all current action timers
             self.plr.action_queue[0].tick()
-            self.room.enemies[0].action_queue[0].tick()
+            current_room.enemies[0].action_queue[0].tick()
 
             # resolve actions
             if self.plr.action_queue[0].timer <= 0:
                 self.plr.action_queue[0].resolve()
                 await asyncio.sleep(0.4)
-            if self.room.enemies[0].action_queue[0].timer == 0:
-                self.room.enemies[0].action_queue[0].resolve()
+            if current_room.enemies[0].action_queue[0].timer == 0:
+                current_room.enemies[0].action_queue[0].resolve()
                 await asyncio.sleep(0.4)
 
             # kill resolved actions
             if self.plr.action_queue[0].timer <= 0:
                 self.plr.action_queue[0].resolve_balance()
                 self.plr.action_queue.pop(0)
-            if self.room.enemies[0].action_queue[0].timer <= 0:
-                self.room.enemies[0].action_queue[0].resolve_balance()
-                self.room.enemies[0].action_queue.pop(0)
+            if current_room.enemies[0].action_queue[0].timer <= 0:
+                current_room.enemies[0].action_queue[0].resolve_balance()
+                current_room.enemies[0].action_queue.pop(0)
                 
             # new turn bookkeeping
             i = 0
@@ -127,7 +136,7 @@ class Game:
 
     def get_enemy_action(self) -> bc.Action:
         try:
-            return self.room.enemies[0].action_queue[0]
+            return current_room.enemies[0].action_queue[0]
         except IndexError:
             pass
     
@@ -162,22 +171,14 @@ class Game:
             source = self.plr
         )
         if isinstance(new_action, bc.Attack):
-            new_action.tgt = self.room.enemies[0]
+            new_action.tgt = current_room.enemies[0]
         self.plr.action_queue.append(new_action)
-        self.plr_event.set()
-
-    def on_object_action(self, obj:bc.RoomObject, index:int):
-        print('on_object_action')
-
-    def try_move_room(self, room:bc.Room):
-        print(f'enter room: {room} with floor: {room.floor_items}')
-        self.room = room
         self.plr_event.set()
 
     # TODO: remove this and find a clever way to do it in GUI, the flashing sucks
     def _reload_room(self):
         '''Called to refresh the GUI'''
-        return GUI.current_frame.Refresh()
+        return GUI.EnterRoom(current_room)
     
 # DEPRECATED -> TODO: remove
 def sort_actions(plr_action:bc.Action, actions:list[bc.Action]) -> list[bc.Action]:

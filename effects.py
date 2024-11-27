@@ -48,13 +48,15 @@ class Accuracy(mod_accuracy):
 
 class BalanceHeal(on_tick):
     name = 'Balance Gain'
-    desc = 'Regenerates balance every few turns'
+    desc = 'Regenerates balance every $ turns'
     def __init__(self, rate:float = 1.0, **kwargs) -> None:
         super().__init__(**kwargs)
         self.healed = 0.0
         self.rate = rate
+        x = self.desc.index('$')
+        self.desc = self.desc[:x] + str(int(1/rate)) + self.desc[x+1:]
     def __call__(self, parent:bc.Entity):
-        self.healed += 1
+        self.healed += self.rate
         if self.healed >= 1.0:
             self.healed -= 1
             parent.src.balance += 1

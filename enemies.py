@@ -56,14 +56,20 @@ class Skeleton(bc.Enemy):
 
 class CaveTroll(bc.Enemy):
     name = 'Cave Troll'
-    desc = 'Large, scary and blue'
-    max_hp = 99
-    bal_max = 80
-    bal_rec = 8
-    dmg_base = 25
-    stagger_base = 26
-    strategy = st.Troll
+    desc = 'Large, scary and blue!'
+    max_hp = 45
+    bal_max = 30
+    dmg_base = 4
+    stagger_base = 5
+    parry = 3
+    defense = 6
+    strategy_class = st.Troll
     actions = [
-        (actions.Bite, 40),
+        (actions.TrollKick, 50),
         (actions.TrollReady, 60)
     ]
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.attack_ready = False
+        self.grant_effect(effects.BalanceHeal(rate = 0.1))
+        self.grant_effect(effects.Stregth(5))

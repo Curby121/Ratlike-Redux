@@ -40,10 +40,9 @@ class Chop(bc.Attack):
     timer = 5
     dmg_mod = 1.0
     stagger_mod = 1.0
-    acc = 14
+    acc = 10
     parry_mod = 0.5
-    bal_use_cost = 2
-    bal_resolve_cost = -1
+    bal_use_cost = 1
 
 class Stab(bc.Attack):
     '''Default attack for daggers and knives
@@ -53,7 +52,7 @@ class Stab(bc.Attack):
     use_msg = 'stabs quickly.'
     timer = 3
     bal_use_cost = 2
-    bal_resolve_cost = -1
+    bal_resolve_cost = -2
     dmg_mod = 1
     parry_mod = 0.5
     acc = 14
@@ -111,6 +110,17 @@ class Bite(bc.Attack):
     parry_mod = 1
     acc = 18
     stagger_mod = 0.5
+
+class TrollKick(bc.Attack):
+    name = 'Kick'
+    desc = 'Whack!'
+    use_msg = 'kicks!'
+    timer = 3
+    dmg_mod = 0.3
+    parry_mod = 0
+    acc = 20
+    stagger_mod = 1.0
+    bal_use_cost = 2
 
 class Dodge(bc.Channel):
     '''Standard Dodge action. Checks for a reaction_class on it\'s source.'''
@@ -194,6 +204,6 @@ class Block(bc.Channel):
             atk.src._take_damage(0, reflected_stagger)
 
 class TrollReady(bc.Action):
-    name = 'Troll smash prep'
-    desc = ''
+    name = 'Raise Club'
+    desc = 'What goes up...'
     use_msg = 'raises his club over his head!'

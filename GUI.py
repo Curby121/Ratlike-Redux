@@ -11,7 +11,7 @@ root_win.geometry("1280x720")
 root_win.rowconfigure(0, weight=1)
 root_win.columnconfigure(1, weight=1)
 
-game = None
+game_instance = None
 current_log = None
 log_msgs:list[str] = []
 
@@ -130,6 +130,7 @@ class Inv(PopUp):
         def __init__(self, root:tk.Frame, item):
             super().__init__(root, background='black')
             import baseclasses as bc
+            import game
             self.item:bc.Item = item
             actns = item.inventory_actions()
             count = len(actns)
@@ -138,7 +139,7 @@ class Inv(PopUp):
                 butt.grid(row=0, column=i+1, sticky='e')
 
             self.name = ttk.Label(self, text=item.name, font=('Arial', 16))
-            self.drop = tk.Button(self, text='Drop', font=('Arial', 12), command=Inv.refresh(item.drop, game.room))
+            self.drop = tk.Button(self, text='Drop', font=('Arial', 12), command=Inv.refresh(item.drop, game.current_room))
             self.examine = tk.Button(self, text='Examine', font=('Arial', 12), command=self.examineitem)
             
             self.name.grid(row =0, sticky='w')
@@ -226,8 +227,8 @@ class RoomWindow(BaseWindow):
             )
             self.but.pack(ipady=15)
         def move(self):
-            global game
-            self.exit.dest_room.enter(game)
+            global game_instance
+            game_instance.EnterRoom(self.exit.dest_room)
             log('You walk through the door...')
     
     class Object(tk.Frame):
@@ -239,21 +240,26 @@ class RoomWindow(BaseWindow):
                 text = obj.name
             )
             self.lab.grid(row=0, column=0)
-            for i,a in enumerate(obj.actions):
-                b = ttk.Button(
-                    self,
-                    text = a.name,
-                    command = self.resolve(a.resolve)
-                )
-                b.grid(row=i+1,column=0)
+            try:
+                for i,a in enumerate(obj.actions):
+                    b = ttk.Button(
+                        self,
+                        text = a.name,
+                        command = self.resolve(a.resolve)
+                    )
+                    b.grid(row=i+1,column=0)
+            except Exception as e:
+                print(f'Malformed action:{obj} : {obj.actions}')
+                raise e
         def resolve(self, fn):
             '''This stores a copy of the resolve function on the button'''
-            return lambda: fn(game)
+            return lambda: fn(game_instance)
 
     class Item(tk.Frame):
         def take(self):
-            print(f'take room: {game.room}')
-            self.item.take(game.room)
+            import game
+            print(f'take room: {game.current_room}')
+            self.item.take(game.current_room)
             current_frame.Refresh()
         def __init__(self, root, item):
             super().__init__(root)
@@ -302,12 +308,12 @@ class CombatWindow(BaseWindow):
     def Updt(self):
         self.plr_stats.update()
         self.enemy_stats.update()
-        self.enemy_actn.update(game.get_enemy_action())
-        self.player_actn.update(game.get_player_action())
+        self.enemy_actn.update(game_instance.get_enemy_action())
+        self.player_actn.update(game_instance.get_player_action())
 
     def Refresh(self):
-        p_acts = game.plr.get_combat_actions()
-        self.make_plr_actions(p_acts, game.plr.get_availables(p_acts))
+        p_acts = game_instance.plr.get_combat_actions()
+        self.make_plr_actions(p_acts, game_instance.plr.get_availables(p_acts))
     
     class PlrStats(ttk.Frame):
         def __init__(self, root):
@@ -321,10 +327,10 @@ class CombatWindow(BaseWindow):
             self.hp_B.place(relx=0.45, rely=0.55, anchor='ne')
             self.bal_B.place(relx=0.55, rely=0.55, anchor='nw')
         def update(self):
-            self.hp_L.configure(text = f'HP: {game.plr.hp}/{game.plr.max_hp}')
-            self.bal_L.configure(text = f'Bal: {game.plr.balance}/{game.plr.bal_max}')
-            self.hp_B.configure(value = 100*(game.plr.hp / game.plr.max_hp))
-            self.bal_B.configure(value = 100*(game.plr.balance / game.plr.bal_max))
+            self.hp_L.configure(text = f'HP: {game_instance.plr.hp}/{game_instance.plr.max_hp}')
+            self.bal_L.configure(text = f'Bal: {game_instance.plr.balance}/{game_instance.plr.bal_max}')
+            self.hp_B.configure(value = 100*(game_instance.plr.hp / game_instance.plr.max_hp))
+            self.bal_B.configure(value = 100*(game_instance.plr.balance / game_instance.plr.bal_max))
 
     class EnemyStats(ttk.Frame):
         def __init__(self, root, enemy):
@@ -403,15 +409,15 @@ class CombatWindow(BaseWindow):
                     actn_b.config(state = tk.DISABLED)
             
             def choose_action(self):
-                global game
-                game.select_player_action(self.action)
+                global game_instance
+                game_instance.select_player_action(self.action)
 
             def x(self):
                 examine_action(self.action)
 
 def init(gme):
-    global game
-    game = gme
+    global game_instance
+    game_instance = gme
 
 async def run():
     while True:

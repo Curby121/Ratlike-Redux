@@ -32,17 +32,17 @@ class Basic(bc.Strategy):
         return random.choices(actns, wgts)[0](source = self.parent)
 
 class Troll(Basic):
-    def __init__(self, parent: bc.Damageable) -> None:
-        super().__init__(parent)
-        self.attack_ready = False
     def get_action(self) -> bc.Action:
-        if self.parent.balance >= self.parent.bal_max:
-            self.attack_ready = False
-            return actions.Pause
-        elif self.attack_ready:
-            self.attack_ready = False
-            return actions.Smash
+        print('trollstrat 1')
+        if self.parent.balance <= 0:
+            self.parent.attack_ready = False
+            return actions.Pause(self.parent)
+        elif self.parent.attack_ready:
+            print('troll strat')
+            self.parent.attack_ready = False
+            return actions.Smash(self.parent)
         actn = super().get_action()
-        if actn is actions.TrollReady:
-            self.attack_ready = True
+        if isinstance(actn, actions.TrollReady):
+            print('3')
+            self.parent.attack_ready = True
         return actn
