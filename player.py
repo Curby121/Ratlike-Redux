@@ -67,9 +67,12 @@ class Player(bc.Damageable):
     def generate_effects(self):
         self.effects.clear()
         for slot, item in self.equipment.items():
-            try:
-                self.effects.extend(item.effects)
-            except AttributeError: pass
+            if item is None: continue
+            if not hasattr(item, 'effects'): continue
+            for e in item.effects:
+                try:
+                    self.grant_effect(e)
+                except AttributeError: pass
 
     def get_dmg(self, atk:bc.Attack) -> float:
         for key, wep in self.equipment.items():

@@ -6,8 +6,8 @@ random.seed()
 
 class LabyrinthRoom(bc.Room):
     centerpieces = [
-        (ro.Chest, 80),
-        (None, 30)
+        (ro.Chest, 20),
+        (None, 50)
     ]
     encounters = [
         (enemies.Rat, 50),
@@ -18,17 +18,17 @@ class LabyrinthRoom(bc.Room):
     
     def __init__(self, conn_rooms: dict[str,] = None, enemies: list[bc.Enemy] = None, centerpiece: bc.RoomObject = None):
         if enemies is None:
-            self.enemies = []
             new_e_class:bc.Enemy = self.rand_choice(self.encounters)
             if new_e_class is not None:
-                self.enemies.append(new_e_class())
+                print('enemy made')
+                enemies = [new_e_class()]
         if centerpiece is None:
             c = self.rand_choice(self.centerpieces)
             if c is not None:
                 centerpiece = c()
 
         # sleeping troll chance
-        if random.randint(0,4) >= 0 and len(self.enemies) == 0:
+        if random.randint(0,4) >= 0 and enemies is None:
             centerpiece = ro.Troll()
         
         super().__init__(enemies = enemies, centerpiece = centerpiece, conn_rooms = conn_rooms)

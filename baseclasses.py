@@ -45,7 +45,12 @@ class Entity(Viewable):
         return lst
 
     def grant_effect(self, eff):
-        self.effects.append(eff)
+        for e in self.effects:
+            if type(e) == type(eff):
+                e += eff
+                break
+        else:
+            self.effects.append(eff)
 
     def off_balance(self, cost:int = 0) -> bool:
         '''Returns true if entity cannot spent cost in balance'''

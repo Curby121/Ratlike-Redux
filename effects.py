@@ -12,22 +12,32 @@ class on_tick(Effect):
     def __call__(self, parent:bc.Entity):
         return NotImplementedError
     
-class mod_damage(Effect):
-    '''Modifies all damage dealt by the return value -> (add, mult)'''
-    def __call__(self, atk:bc.Attack) -> tuple[int, float]:
-        return NotImplementedError
+class mod_value(Effect):
+    '''Base class for a specific numbers adjustment; see implementations'''
+    add:int
+    mult:float
+    def __init__(self, add:int = 0, mult:float = 1.0) -> None:
+        self.add = add
+        self.mult = mult
+    def __call__(self, atk: bc.Attack) -> tuple[int, float]:
+        return self.add, self.mult
+    def __add__(self, val):
+        self.add += val.add
+        self.mult += self.mult -1
+        return self
+    def examine(self) -> str:
+        return super().examine() + f'\n  +{self.add} x{self.mult}'
 
-class mod_accuracy(Effect):
-    '''Modifies accuracy by the return value -> (add, mult)'''
-    def __call__(self, atk:bc.Attack) -> tuple[int, float]:
-        return NotImplementedError
+class mod_damage(mod_value):
+    '''Called when damage calculation is performed during attack resolution'''
+
+class mod_accuracy(mod_value):
+    '''Called when accuracy max roll calculation during attack resolution'''
 
 class Stregth(mod_damage):
     '''Strength increases damage dealt by 1, double as effective on heavy attacks'''
     name = 'Strength'
     desc = 'Deals bonus damage!'
-    def __init__(self, strength:int = 1) -> None:
-        self.value = strength
     def __call__(self, atk: bc.Attack) -> tuple[int, float]:
         if 'heavy' in atk.styles:
             print('strength x2')
@@ -41,10 +51,6 @@ class Accuracy(mod_accuracy):
     '''Increases accuracy by flat number'''
     name = 'Accuracy'
     desc = 'Attacks find their mark more often'
-    def __init__(self, acc_buff:int = 1.5) -> None:
-        self.value = acc_buff
-    def __call__(self, atk: bc.Attack) -> tuple[int, float]:
-        return self.value, 1.0
 
 class BalanceHeal(on_tick):
     name = 'Balance Gain'

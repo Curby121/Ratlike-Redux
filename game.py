@@ -38,7 +38,8 @@ class Game:
         #weapons.WoodenShield()._sec_e()
         weapons.Dagger()._sec_e()
 
-        #items.Ring(gem_class=items.Opal).equip()
+        items.Ring(gem_class=items.Ruby).equip()
+        items.Amulet(gem_class=items.Opal).equip()
 
         #for i in range(4): plr.inv.append(weapons.WoodenShield())
         #plr.inv.append(weapons.WoodenShield())
@@ -49,8 +50,9 @@ class Game:
         GUI.init(self)
         t1 = asyncio.create_task( GUI.run() )
 
-        new_room = rooms.LabyrinthRoom()
-        self.EnterRoom(new_room)
+        start_room = rooms.LabyrinthRoom()
+        print(f'start: {start_room.enemies}')
+        self.EnterRoom(start_room)
         while True:
             self.room_event.clear()
             await self._switch_rooms(current_room)
@@ -59,10 +61,11 @@ class Game:
     async def _switch_rooms(self, room:bc.Room):
         GUI.EnterRoom(room)
         if len(room.enemies) != 0:
+            print('enemies in room')
             await self.StartCombat(room)
 
     def EnterRoom(self, room:bc.Room):
-        print(f'enter room: {room} with floor: {room.floor_items}')
+        print(f'enter room: {room} with floor: {room.floor_items}, enemies:{room.enemies}')
         room.on_enter()
         global current_room
         current_room = room
