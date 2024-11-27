@@ -468,7 +468,7 @@ def examine_action(action):
     log(f'{action.name} | {action.timer}: \n{action.desc}')
     if hasattr(action, 'acc'):
         log(f'  Accuracy:  {action.acc}')
-        log(f'  Parry:    x{action.parry_mod}')
+    log(f'  Parry:    x{action.parry_mod}')
     if hasattr(action, 'dmg_mod'):
         log(f'  Damage:   x{action.dmg_mod}')
         log(f'  Stagger:  x{action.stagger_mod}')

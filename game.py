@@ -31,15 +31,16 @@ class Game:
                 )
 
         #testing
-        #weapons.Sword()._prim_e()
+        weapons.Sword()._prim_e()
         #weapons.Spear()._prim_e()
         #weapons.Mace()._prim_e()
 
+        weapons.Sword()._sec_e()
         #weapons.WoodenShield()._sec_e()
-        weapons.Dagger()._sec_e()
+        #weapons.Dagger()._sec_e()
 
-        items.Ring(gem_class=items.Ruby).equip()
-        items.Amulet(gem_class=items.Opal).equip()
+        #items.Ring(gem_class=items.Ruby).equip()
+        #items.Amulet(gem_class=items.Opal).equip()
 
         #for i in range(4): plr.inv.append(weapons.WoodenShield())
         #plr.inv.append(weapons.WoodenShield())
@@ -61,7 +62,6 @@ class Game:
     async def _switch_rooms(self, room:bc.Room):
         GUI.EnterRoom(room)
         if len(room.enemies) != 0:
-            print('enemies in room')
             await self.StartCombat(room)
 
     def EnterRoom(self, room:bc.Room):
@@ -90,14 +90,11 @@ class Game:
                     self.select_player_action(actn.Pause)
                     GUI.log('YOU LOSE YOUR BALANCE!\n')
                     await asyncio.sleep(1)
-                print('plr a')
                 await self.plr_event.wait() # wait for plr input
                 await asyncio.sleep(.4)
 
             # GET ENEMY ACTION IF NONE
-            print('before')
             if len(current_room.enemies[0].action_queue) == 0:
-                print('after')
                 current_room.enemies[0].take_turn(self.plr)
                 if not isinstance(current_room.enemies[0].action_queue[0], actn.Pause):
                     await asyncio.sleep(.8)

@@ -9,6 +9,7 @@ class Pause(bc.Action):
     timer = 2
     balance_max = -1
     bal_use_cost = -1
+    parry_mod = 2.0
 
 class Stagger(bc.Action):
     name = 'Teetering'
@@ -29,9 +30,9 @@ class Slash(bc.Attack):
     dmg_mod = 0.75
     stagger_mod = 0.5
     acc = 8
+    parry_mod = 1.5
     bal_use_cost = 1
     bal_resolve_cost = -1
-    reach = 5
 
 class Chop(bc.Attack):
     name = 'Chop'
@@ -55,7 +56,7 @@ class Stab(bc.Attack):
     bal_resolve_cost = -2
     dmg_mod = 1
     parry_mod = 0.5
-    acc = 14
+    acc = 10
     stagger_mod = 0.5
     reach = 3
     styles = ['quick']
@@ -83,7 +84,7 @@ class Smash(bc.Attack):
     dmg_mod = 1.0
     stagger_mod = 2.0
     acc = 24
-    parry_mod = 0
+    parry_mod = 0.25
     bal_use_cost = 5
     bal_resolve_cost = -2
     styles = ['heavy']
@@ -108,7 +109,7 @@ class Bite(bc.Attack):
     timer = 3
     dmg_mod = 0.5
     parry_mod = 1
-    acc = 18
+    acc = 12
     stagger_mod = 0.5
 
 class TrollKick(bc.Attack):
@@ -127,7 +128,7 @@ class Dodge(bc.Channel):
     name = 'Dodge'
     desc = 'Attempt to dodge. A dodge action takes 2 actions to prepare, and then dodges for the remainder.'
     use_msg = 'dodged!'
-    timer = 5
+    timer = 4
     bal_use_cost = 3
     bal_resolve_cost = -1
     def __init__(self, source: bc.Entity, **kwargs):

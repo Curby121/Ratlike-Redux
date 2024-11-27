@@ -36,9 +36,12 @@ class Player(bc.Damageable):
 
     def get_combat_actions(self) -> list[bc.Action]:
         acts = []
-        for key, val in self.equipment.items():
-            if val is not None:
-                acts.extend(val.get_actions())
+        for key, wep in self.equipment.items():
+            if wep is not None:
+                for act in wep.get_actions():
+                    if act not in acts:
+                        acts.append(act)
+                #acts.extend(wep.get_actions())
         if len(acts) == 0:
             acts.append(actions.Bite)
         acts.append(actions.Dodge)
@@ -90,9 +93,21 @@ class Player(bc.Damageable):
                 res += item.defense
         return res
 
-    def get_atk_source(self, atk) -> float:
+    def get_atk_source(self, atk) -> bc.Weapon:
         return self.get_weapon_with_attack(atk)
     
+    def get_parry_base(self, atk):
+        res = 0
+        for slot, item in self.equipment.items():
+            try:
+                if atk in item.get_actions():
+                    res += item.parry
+                else:
+                    res += item.parry / 2
+            except AttributeError as e:
+                pass
+        return res
+
     def examine_equipment(self) -> str:
         res = ''
         for key,value in self.equipment.items():

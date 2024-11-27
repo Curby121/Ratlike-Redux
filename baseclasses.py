@@ -76,6 +76,8 @@ class Entity(Viewable):
         raise NotImplementedError
     def get_def(self) -> int:
         raise NotImplementedError
+    def get_parry_base(self, atk):
+        raise NotImplementedError
 
 class Damageable(Entity):
     '''Base Class for all entities capable of taking damage\n
@@ -161,14 +163,18 @@ class Action(Viewable):
     def parry_check(self, atk, off_roll:int = None) -> bool:
         '''Check if this attack parries an attacker'''
         def_mod = self.src.balance / self.src.bal_max
-        def_max = int(self.parry_mod * def_mod)
+        def_ = self.src.get_parry_base(self) * def_mod
+        def_max = int(def_)
         def_roll = random.randint(1, def_max + 1)
         if off_roll is None:
             off_roll = atk._roll_offense()
-        print(f'{self.src.name}\'s {self.name} pry: {def_roll}/{def_max+1}  x{def_mod}')
+        print(f'PRY: {self.src.name}\'s {self.name} {def_roll}/{def_max+1}  x{def_mod}')
         if def_roll > off_roll:
             return True
         return False
+    
+        #self.parry_mod = int(source.get_atk_source(self).parry * self.parry_mod)
+        #self.parry_mod = max(1, self.parry_mod)
 
     # this should probably live in Entity class
     def deflect_check(self, atk, off_roll:int = None) -> bool:
@@ -177,7 +183,7 @@ class Action(Viewable):
             off_roll = atk._roll_offense()
         def_max = self.src.get_def()
         def_roll = random.randint(1, def_max +1)
-        print(f'{self.src.name}\'s {self.name} def: {def_roll}/{def_max+1}')
+        print(f'DEF: {self.src.name} {def_roll}/{def_max+1}')
         if def_roll >= off_roll:
             return True
         return False
@@ -203,8 +209,6 @@ class Attack(Action):
     styles:list[str] = []
 
     def __init__(self, source: Entity, **kwargs):
-        self.parry_mod = int(source.get_atk_source(self).parry * self.parry_mod)
-        self.parry_mod = max(1, self.parry_mod)
         super().__init__(source, **kwargs)
 
     # TODO: cleanup
@@ -244,7 +248,7 @@ class Attack(Action):
 
         off_max = int(off_base * (self.acc_base + off_mod))
         roll = random.randint(1, off_max + 1)
-        print(f'{self.src.name}\'s {self.name} atk: {roll}/{off_max+1}  x{off_mod+self.acc_base}')
+        print(f'ATK: {self.src.name}\'s {self.name} {roll}/{off_max+1}  x{off_mod+self.acc_base}')
         return roll
 
 class Channel(Action):
@@ -289,6 +293,8 @@ class Enemy(Damageable):
         return self
     def get_def(self) -> int:
         return self.defense
+    def get_parry_base(self, atk):
+        return self.parry
 
 class Item(Viewable):
     '''Base Class for entities that can be placed in players inventory\n
