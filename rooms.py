@@ -2,7 +2,6 @@ import baseclasses as bc
 import roomobjects as ro
 import enemies
 import random
-import effects
 random.seed()
 
 class LabyrinthRoom(bc.Room):
@@ -13,8 +12,8 @@ class LabyrinthRoom(bc.Room):
         ([], 90)
     ]
     centerpieces = [
-        (ro.Chest, 15),
-        (None, 85)
+        (ro.Chest, 20),
+        (None, 80)
     ]
     def __init__(self, conn_rooms: dict[str,] = {}, enemies: list[bc.Enemy] = [], centerpiece: bc.RoomObject = None):
         if len(enemies) == 0:

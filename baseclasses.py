@@ -16,7 +16,7 @@ class Viewable:
         for key, val in kwargs.items():
             setattr(self, key, val)
     def examine(self) -> str:
-        return f"{self.name}. {self.desc}"
+        return f"{self.name}:\n {self.desc}"
 
 # might not be useful. All entities so far are damageables
 # TODO:? Merge with damageable, have 'damageable' just as a bool
@@ -326,6 +326,11 @@ class Equippable(Item):
         ]
     def get_actions(self) -> list[Attack]:
         return []
+    def examine(self) -> str:
+        res = super().examine()
+        if self.defense > 0:
+            res += f'\n  Def: {self.defense}'
+        return res
     
 class Weapon(Equippable):
     '''Base class for all weapons.\n

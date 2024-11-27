@@ -51,7 +51,7 @@ class BaseWindow(tk.Canvas):
             self.eqp = ttk.Label(self, text='eqp', font=('Times New Roman', 11))
             import game
             self.eqp.configure(text=game.plr.examine_equipment())
-            self.eqp.place(relx=0.5, rely=0.2, height=50, relwidth=0.9, anchor='n')
+            self.eqp.place(relx=0.5, rely=0.2, relwidth=0.9, anchor='n')
             self.buttons = self.Buttons(self)
             self.buttons.place(relx=0.5, rely=0.75, anchor='s')
 

@@ -1,3 +1,5 @@
+'''Weapons and Equipment'''
+
 import baseclasses as bc
 import actions
 import effects
@@ -47,12 +49,25 @@ class Mace(bc.Weapon):
         actions.Smash
     ]
 
-
 class WoodenShield(bc.Weapon):
     name = 'Wooden Shield'
     desc = 'A small round wooden shield.'
     value = 50
-    parry_mod = 1.5
+    parry_mod = 1.5 # no effect on block currently ?
     attacks = [
         actions.Block
     ]
+
+class LeatherCap(bc.Equippable):
+    name = 'Leather Cap'
+    desc = 'A tough leather cap.'
+    slot = 'Head'
+    value = 25
+    defense = 1
+
+class LeatherTunic(bc.Equippable):
+    name = 'Leather Tunic'
+    desc = 'A modest tunic made from boiled leather.'
+    slot = 'Chest'
+    value = 25
+    defense = 1

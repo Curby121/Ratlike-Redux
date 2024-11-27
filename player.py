@@ -20,7 +20,10 @@ class Player(bc.Damageable):
         self.equipment:dict[str, bc.Equippable] = {
             'Primary': None,
             'Secondary': None,
-            'Hand': None
+            'Hand': None,
+            'Neck': None,
+            'Head': None,
+            'Chest': None
         }
         self.action:bc.Action = None
 
@@ -80,7 +83,8 @@ class Player(bc.Damageable):
     def get_def(self) -> int:
         res = self.defense
         for slot, item in self.equipment.items():
-            res += item.defense
+            if item is not None:
+                res += item.defense
         return res
 
     def get_atk_source(self, atk) -> float:

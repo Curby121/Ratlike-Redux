@@ -1,6 +1,5 @@
 import baseclasses as bc
-import GUI
-import weapons
+import items
 
 class Chest(bc.RoomObject):
     name = 'Chest'
@@ -11,7 +10,7 @@ class Chest(bc.RoomObject):
         ]
         self.contents = contents
         if len(self.contents) == 0:
-            self.contents.append(weapons.WoodenShield())
+            self.contents.append(items.RollTable(items.BasicDrops))
         super().__init__()
         
     class Open(bc.ObjectAction):
