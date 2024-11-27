@@ -9,11 +9,11 @@ class LabyrinthRoom(bc.Room):
         ([enemies.Rat], 50),
         ([enemies.Goblin], 30),
         ([enemies.Skeleton], 15),
-        ([], 90)
+        ([], 10)
     ]
     centerpieces = [
-        (ro.Chest, 20),
-        (None, 80)
+        (ro.Chest, 80),
+        (None, 30)
     ]
     def __init__(self, conn_rooms: dict[str,] = {}, enemies: list[bc.Enemy] = [], centerpiece: bc.RoomObject = None):
         if len(enemies) == 0:

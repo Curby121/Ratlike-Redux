@@ -8,7 +8,8 @@ class Chest(bc.RoomObject):
         self.actions = [
             self.Open(parent = self)
         ]
-        self.contents = contents
+        self.contents = []
+        self.contents.extend(contents)
         if len(self.contents) == 0:
             self.contents.append(items.RollTable(items.BasicDrops))
         super().__init__()

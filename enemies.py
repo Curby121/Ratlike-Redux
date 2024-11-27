@@ -46,6 +46,7 @@ class Skeleton(bc.Enemy):
     dmg_base = 6
     stagger_base = 5
     parry = 2
+    defense = 3
     strategy_class = st.Basic
     actions = [
         (actions.Smash, 60),

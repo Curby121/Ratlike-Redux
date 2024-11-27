@@ -44,7 +44,7 @@ class Accuracy(mod_accuracy):
     def __init__(self, acc_buff:int = 1.5) -> None:
         self.value = acc_buff
     def __call__(self, atk: bc.Attack) -> tuple[int, float]:
-        return 0, self.value
+        return self.value, 1.0
 
 class BalanceHeal(on_tick):
     name = 'Balance Gain'

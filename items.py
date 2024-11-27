@@ -10,19 +10,24 @@ class Gem(bc.Item):
     def make_effect(self) -> effects.Effect:
         return self.effect_class(self.effect_amount)
 
-class Ring(bc.Equippable):
-    slot = 'Hand'
+class Jewelry(bc.Equippable):
     def __init__(self, gem_class:Gem, **kwargs):
         super().__init__(**kwargs)
-        self.name = gem_class.name + ' Ring'
         self.effects = [gem_class.make_effect(gem_class)]
 
-class Amulet(bc.Equippable):
+class Ring(Jewelry):
+    slot = 'Hand'
+    def __init__(self, gem_class:Gem, **kwargs):
+        super().__init__(gem_class, **kwargs)
+        self.name = gem_class.name + ' Ring'
+        self.desc = f'A ring set with {gem_class.desc}'
+
+class Amulet(Jewelry):
     slot = 'Neck'
     def __init__(self, gem_class:Gem, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(gem_class, **kwargs)
         self.name = gem_class.name + ' Amulet'
-        self.effects = [gem_class.make_effect(gem_class)]
+        self.desc = f'An amulet set with {gem_class.desc}'
 
 class Ruby(Gem):
     name = 'Ruby'
@@ -34,7 +39,7 @@ class Opal(Gem):
     name = 'Opal'
     desc = 'A clear stone. Peering through it makes the world seem clearer...'
     effect_class = effects.Accuracy
-    effect_amount = 1.5
+    effect_amount = 2
 
 class DropTable:
     '''Drop tables should never be instantiated'''

@@ -19,8 +19,8 @@ class Sword(bc.Weapon):
     name = 'Iron Sword'
     desc = 'Swordsman\'s best friend.'
     value = 15
-    dmg_base = 5
-    parry = 8
+    dmg_base = 4
+    parry = 16
     attacks = [
         actions.Slash,
         actions.Chop

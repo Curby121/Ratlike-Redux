@@ -20,13 +20,13 @@ class Game:
         global plr
         plr = self.plr
 
-        # for holding execution for when a player descision needs to be made
+        # for holding execution for when a player decision needs to be made
         self.plr_event = asyncio.Event()
 
         GUI.log('Welcome to Rat Game!\n'+
-                'The game is over when your hp reaches 0. Choose actions carefully! Actions are mediated by'+
+                'The game is over when your hp reaches 0. Choose actions carefully! Actions are mediated by '+
                 'the balance of the creature using it. Before an attack lands the defender has a chance to parry it. '+
-                'Parry chance is affected much more by lost balance than accuracy. Try to knock your opponent off balance and then go for the killing blow!'
+                'Parry chance is affected much more by balance than accuracy. Try to knock your opponent off balance and then go for the killing blow!'
                 )
 
         #testing
@@ -40,8 +40,8 @@ class Game:
         #items.Ring(gem_class=items.Opal).equip()
 
         #for i in range(4): plr.inv.append(weapons.WoodenShield())
-        plr.inv.append(weapons.WoodenShield())
-        plr.inv.append(weapons.LeatherCap())
+        #plr.inv.append(weapons.WoodenShield())
+        #plr.inv.append(weapons.LeatherCap())
 
     async def Start(self):
         '''Start and run game'''
