@@ -20,7 +20,7 @@ class Sword(bc.Weapon):
     desc = 'Swordsman\'s best friend.'
     value = 15
     dmg_base = 4
-    parry = 8
+    parry = 10
     attacks = [
         actions.Slash,
         actions.Chop
@@ -30,9 +30,8 @@ class Spear(bc.Weapon):
     name = 'Wooden Spear'
     desc = 'A long wooden shaft with a sharp piece of iron lashed on top. It\'s length allows the user to parry attacks easily'
     dmg_base = 5
-    twohanded = True
     value = 15
-    parry = 10
+    parry = 15
     attacks = [
         actions.Lunge,
         actions.Stab

@@ -100,8 +100,11 @@ class Player(bc.Damageable):
         res = 0
         for slot, item in self.equipment.items():
             try:
-                if atk in item.get_actions():
-                    res += item.parry
+                for act in item.get_actions():
+                    if isinstance(atk, act):
+                        res += item.parry
+                        print(f'{atk.name} found.')
+                        break
                 else:
                     res += item.parry / 2
             except AttributeError as e:

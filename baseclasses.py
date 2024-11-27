@@ -172,9 +172,6 @@ class Action(Viewable):
         if def_roll > off_roll:
             return True
         return False
-    
-        #self.parry_mod = int(source.get_atk_source(self).parry * self.parry_mod)
-        #self.parry_mod = max(1, self.parry_mod)
 
     # this should probably live in Entity class
     def deflect_check(self, atk, off_roll:int = None) -> bool:

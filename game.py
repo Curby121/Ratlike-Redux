@@ -72,7 +72,6 @@ class Game:
         self.plr_event.clear()
         self.room_event.set()
 
-
     async def StartCombat(self, room:bc.Room):
         plr.generate_effects() # create all player effects from equipment
         self.plr.balance = self.plr.bal_max
