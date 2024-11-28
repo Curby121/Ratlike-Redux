@@ -22,7 +22,7 @@ class Game:
 
         # for holding execution for when a player decision needs to be made
         self.plr_event = asyncio.Event()
-        self.room_event = asyncio.Event()
+        self.room_event = asyncio.Event() # for reloading the room in GUI
 
         GUI.log('Welcome to Rat Game!\n'+
                 'The game is over when your hp reaches 0. Choose actions carefully! Actions are mediated by '+
@@ -35,7 +35,7 @@ class Game:
         #weapons.Spear()._prim_e()
         #weapons.Mace()._prim_e()
 
-        weapons.Sword()._sec_e()
+        #weapons.Sword()._sec_e()
         #weapons.WoodenShield()._sec_e()
         #weapons.Dagger()._sec_e()
 
@@ -50,9 +50,7 @@ class Game:
         '''Start and run game'''
         GUI.init(self)
         t1 = asyncio.create_task( GUI.run() )
-
         start_room = rooms.LabyrinthRoom()
-        print(f'start: {start_room.enemies}')
         self.EnterRoom(start_room)
         while True:
             self.room_event.clear()

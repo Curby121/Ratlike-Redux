@@ -269,7 +269,7 @@ class Strategy:
         tgt = target.action_queue[0]
         if not isinstance(tgt, Attack):
             return False
-        if tgt.timer > 2 and tgt.timer < 4: # blocking will time correctly
+        if tgt.timer > 2 and tgt.timer <= 4: # blocking will time correctly
             return True
         return False
     
