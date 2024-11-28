@@ -164,7 +164,7 @@ class Action(Viewable):
         '''Check if this attack parries an attacker'''
         def_mod = self.src.balance / self.src.bal_max
         def_ = self.src.get_parry_base(self) * def_mod
-        def_max = int(def_)
+        def_max = int(def_ * self.parry_mod)
         def_roll = random.randint(1, def_max + 1)
         if off_roll is None:
             off_roll = atk._roll_offense()
@@ -205,8 +205,9 @@ class Attack(Action):
     dmg_mod:float
     styles:list[str] = []
 
-    def __init__(self, source: Entity, **kwargs):
+    def __init__(self,  source: Entity, target:Entity, **kwargs):
         super().__init__(source, **kwargs)
+        self.tgt = target
 
     # TODO: cleanup
     def resolve(self) -> bool:
@@ -261,9 +262,16 @@ class Strategy:
         self.parent:Damageable = parent
         import game
         self.player = game.plr
-    def get_action(self) -> Action:
+    def get_action(self, target:Entity) -> Action:
         '''Should always be overwritten by inhereted members'''
         return random.choice(self.parent.actions)[0](source = self.parent)
+    def _should_dodge(self, target:Entity) -> bool:
+        tgt = target.action_queue[0]
+        if not isinstance(tgt, Attack):
+            return False
+        if tgt.timer > 2 and tgt.timer < 4: # blocking will time correctly
+            return True
+        return False
     
 class Enemy(Damageable):
     '''Base Class for enemies that the player will fight.\n
@@ -282,10 +290,9 @@ class Enemy(Damageable):
     def take_turn(self, player) -> None:
         if len(self.action_queue) != 0:
             return
-        new_action = self.strategy.get_action()
-        if isinstance(new_action, Attack):
-            new_action.tgt = player
-        self.action_queue.append(new_action)
+        self.action_queue.append(
+            self.strategy.get_action(target = player)
+        )
     def get_atk_source(self, *args):
         return self
     def get_def(self) -> int:

@@ -7,12 +7,11 @@ random.seed()
 
 class Basic(bc.Strategy):
     parent:bc.Enemy
-    def get_action(self, actin_ls = None) -> bc.Action:
+    def get_action(self, target:bc.Entity) -> bc.Action:
+        if self._should_dodge(target):
+            return actions.Dodge(source = self.parent, target = target)
         actns:list[bc.Action]
-        if actin_ls is not None:
-            actns,w = zip(*actin_ls)
-        else:
-            actns,w = zip(*self.parent.actions)
+        actns,w = zip(*self.parent.actions)
         wgts = []
         wgts.extend(w)
 
@@ -29,10 +28,10 @@ class Basic(bc.Strategy):
         if sum(wgts) <= 0:
             print(f'{self.parent.name} has no actions avail: wgts: {wgts}')
             return actions.Pause(source = self.parent)
-        return random.choices(actns, wgts)[0](source = self.parent)
+        return random.choices(actns, wgts)[0](source = self.parent, target = target)
 
 class Troll(Basic):
-    def get_action(self) -> bc.Action:
+    def get_action(self, target:bc.Entity) -> bc.Action:
         print('trollstrat 1')
         if self.parent.balance <= 0:
             self.parent.attack_ready = False

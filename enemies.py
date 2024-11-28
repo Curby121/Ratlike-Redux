@@ -16,7 +16,7 @@ class Rat(bc.Enemy):
     strategy_class = st.Basic
     actions = [
         (actions.Bite, 4),
-        (actions.Dodge, 10)
+        (actions.Dodge, 2)
     ]
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)

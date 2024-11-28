@@ -166,11 +166,10 @@ class Game:
 
     def select_player_action(self, action:bc.Action):
         '''Sets player combat action.'''
-        new_action = action(
-            source = self.plr
-        )
-        if isinstance(new_action, bc.Attack):
-            new_action.tgt = current_room.enemies[0]
+        if issubclass(action, bc.Attack):
+            new_action = action(source=self.plr, target=current_room.enemies[0])
+        else:
+            new_action = action(source = self.plr)
         self.plr.action_queue.append(new_action)
         self.plr_event.set()
 
