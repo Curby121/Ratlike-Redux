@@ -27,7 +27,7 @@ class LabyrinthRoom(bc.Room):
                 centerpiece = c()
 
         # sleeping troll chance
-        if random.randint(0,10) == 0 and enemies is None:
+        if random.randint(0,4) == 0 and enemies is None:
             centerpiece = ro.Troll()
         
         super().__init__(enemies = enemies, centerpiece = centerpiece, conn_rooms = conn_rooms)
